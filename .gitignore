@@ -1,32 +1,7 @@
-# Prerequisites
-*.d
+/FillwordServer/.idea
+/FillwordServer/cmake-build-debug
+/FillwordServer/CMakeLists.txt
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+/PolyminoGenerator/.idea
+/PolyminoGenerator/cmake-build-debug
+/PolyminoGenerator/CMakeLists.txt
