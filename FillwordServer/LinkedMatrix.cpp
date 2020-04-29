@@ -158,7 +158,7 @@ void LinkedMatrix::HideRow(Node* row)
 
 void LinkedMatrix::RestoreRows(std::vector<Node*> rows_hidden)
 {
-    Node* main_row_head = rows_hidden[0];
+    Node* main_row_head = rows_hidden.back();
 
     // Showing columns by making values not equal to -1
     Node* node = main_row_head;

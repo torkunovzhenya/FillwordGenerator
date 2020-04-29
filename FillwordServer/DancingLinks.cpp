@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <ctime>
 #include "DancingLinks.hpp"
 
 
@@ -43,6 +44,7 @@ void Figure::FindWays() {
 
 DancingLinks::DancingLinks(int field_h, int field_w, std::vector<int> figures)
 {
+    srand((unsigned int)time(NULL));
     matrix = new LinkedMatrix(field_h, field_w);
     height = field_h;
     width = field_w;
@@ -136,9 +138,16 @@ bool DancingLinks::FindSolution()
 
     Node* node = col;
 
+    std::vector<Node*> variants;
     while (node->down != col)
     {
         node = node->down;
+        variants.push_back(node);
+    }
+    while (!variants.empty())
+    {
+        int rand_index = rand() % variants.size();
+        node = variants[rand_index];
 
         // Hide rows with common columns with chosen
         auto rows_hidden = matrix->ChooseRow(node->row);
@@ -151,6 +160,9 @@ bool DancingLinks::FindSolution()
         // Restore hidden rows
         matrix->RestoreRows(rows_hidden);
         res.pop_back();
+
+        std::swap(variants[rand_index], variants.back());
+        variants.pop_back();
     }
 
     return false;
@@ -168,7 +180,7 @@ void DancingLinks::PrintRes()
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
-            std::cout << field[i][j] << " ";
+            std::cout << (char)(field[i][j] + 60) << " ";
 
         std::cout << std::endl;
     }
