@@ -1,26 +1,27 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <fstream>
 
 using namespace std;
 
-struct f
+struct figure
 {
-    int orientations = 0;
+    int orientations = 1;
     vector<pair<int, int>> cords;
 
-    friend bool operator==(const f& left, const f& right) { return left.cords == right.cords; }
+    friend bool operator==(const figure& left, const figure& right) { return left.cords == right.cords; }
 
-    friend bool operator!=(const f& left, const f& right) { return left.cords != right.cords; }
+    friend bool operator!=(const figure& left, const figure& right) { return left.cords != right.cords; }
 
-    friend bool operator<(const f& left, const f& right) { return left.cords < right.cords; }
+    friend bool operator<(const figure& left, const figure& right) { return left.cords < right.cords; }
 
-    friend bool operator>(const f& left, const f& right) { return left.cords > right.cords; }
+    friend bool operator>(const figure& left, const figure& right) { return left.cords > right.cords; }
 };
 
 
 vector<vector<char>> field;
-set<f> figures_set;
+set<figure> figures_set;
 
 
 void dfs(int x, int y, int x1, int y1, int x2, int y2)
@@ -80,19 +81,17 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
         return;
 
     // Main position
-    f f1 = f();
+    figure f1 = figure();
     for (int i = minx; i <= maxx; ++i)
         for (int j = miny; j <= maxy; ++j)
             if (field[i][j])
                 f1.cords.emplace_back(i - minx, j - miny);
 
-    f1.orientations = 1;
-
     if (figures_set.find(f1) != figures_set.end())
         return;
 
     // Rotate 90 degrees clockwise
-    f f2 = f();
+    figure f2 = figure();
     for (int j = miny; j <= maxy; ++j)
         for (int i = maxx; i >= minx; --i)
             if (field[i][j])
@@ -101,13 +100,13 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
     // If they are equal - all rotates will be the same
     if (f2 != f1)
     {
-        f1.orientations *= 2;
-
         if (figures_set.find(f2) != figures_set.end())
             return;
 
+        f1.orientations *= 2;
+
         // Rotate 180 degrees clockwise
-        f f3 = f();
+        figure f3 = figure();
         for (int i = maxx; i >= minx; --i)
             for (int j = maxy; j >= miny; --j)
                 if (field[i][j])
@@ -116,13 +115,13 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
         // If they are equal - there are 2 pairs of same orientations
         if (f3 != f1)
         {
-            f1.orientations *= 2;
-
             if (figures_set.find(f3) != figures_set.end())
                 return;
 
+            f1.orientations *= 2;
+
             // Rotate 270 degrees clockwise
-            f f4 = f();
+            figure f4 = figure();
             for (int j = maxy; j >= miny; --j)
                 for (int i = minx; i <= maxx; ++i)
                     if (field[i][j])
@@ -134,7 +133,7 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
     }
 
     // Reflection main position
-    f f5 = f();
+    figure f5 = figure();
     for (int i = minx; i <= maxx; ++i)
         for (int j = maxy; j >= miny; --j)
             if (field[i][j])
@@ -149,7 +148,7 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
         if (f1.orientations != 1)
         {
             // Reflection rotate 90 degrees clockwise
-            f f6 = f();
+            figure f6 = figure();
             for (int j = maxy; j >= miny; --j)
                 for (int i = maxx; i >= minx; --i)
                     if (field[i][j])
@@ -164,46 +163,57 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
                 if (f1.orientations != 2)
                 {
                     // Reflection rotate 180 degrees clockwise
-                    f f7 = f();
+                    figure f7 = figure();
                     for (int i = maxx; i >= minx; --i)
                         for (int j = miny; j <= maxy; ++j)
                             if (field[i][j])
                                 f7.cords.emplace_back(maxx - i, j - miny);
 
-                    if (figures_set.find(f7) != figures_set.end())
-                        return;
+                    if (f7 != f1)
+                    {
+                        if (figures_set.find(f7) != figures_set.end())
+                            return;
 
-                    // Reflection rotate 270 degrees clockwise
-                    f f8 = f();
-                    for (int j = miny; j <= maxy; ++j)
-                        for (int i = minx; i <= maxx; ++i)
-                            if (field[i][j])
-                                f8.cords.emplace_back(j - miny, i - minx);
+                        // Reflection rotate 270 degrees clockwise
+                        figure f8 = figure();
+                        for (int j = miny; j <= maxy; ++j)
+                            for (int i = minx; i <= maxx; ++i)
+                                if (field[i][j])
+                                    f8.cords.emplace_back(j - miny, i - minx);
+                        if (f8 != f1)
+                        {
+                            if (figures_set.find(f8) != figures_set.end())
+                                return;
 
-                    if (figures_set.find(f8) != figures_set.end())
-                        return;
+                            f1.orientations *= 2;
+                        }
+                    }
                 }
             }
         }
     }
 
-    for (int i = minx; i <= maxx; ++i)
-    {
-        for (int j = miny; j <= maxy; ++j)
-            cout << (int)field[i][j] << " ";
-        cout << endl;
-    }
+//    for (int i = minx; i <= maxx; ++i)
+//    {
+//        for (int j = miny; j <= maxy; ++j)
+//            cout << (int)field[i][j] << " ";
+//        cout << endl;
+//    }
+//    cout << "----------------------------------" << endl;
+
+
+    // Adding to figures set, if there is no this figure
     figures_set.insert(f1);
 }
 
 
-void findWays(int x, int y, int left, string way, int minx, int miny, int maxx, int maxy)
+void findWays(int x, int y, int left, string way, int minx, int miny, int maxx, int maxy, bool can_go_left)
 {
     field[x][y] = 1;
 
     if (left == 0)
     {
-        cout << way << " " << maxx - minx + 1 << " " << maxy - miny + 1 << endl;
+        //cout << way << " " << maxx - minx + 1 << " " << maxy - miny + 1 << endl;
 
         Add_to_set(minx, miny, maxx, maxy);
 
@@ -211,14 +221,17 @@ void findWays(int x, int y, int left, string way, int minx, int miny, int maxx, 
         return;
     }
 
+    // up and down
     if (!field[x - 1][y])
-        findWays(x - 1, y, left - 1, way + '^', min(x - 1, minx), miny, maxx, maxy);
+        findWays(x - 1, y, left - 1, way + '^', min(x - 1, minx), miny, maxx, maxy, can_go_left);
     if (!field[x + 1][y])
-        findWays(x + 1, y, left - 1, way + 'v', minx, miny, max(x + 1, maxx), maxy);
-    if (!field[x][y - 1])
-        findWays(x, y - 1, left - 1, way + '<', minx, min(y - 1, miny), maxx, maxy);
+        findWays(x + 1, y, left - 1, way + 'v', minx, miny, max(x + 1, maxx), maxy, can_go_left);
+
+    // left and right
+    if (can_go_left && !field[x][y - 1])
+        findWays(x, y - 1, left - 1, way + '<', minx, min(y - 1, miny), maxx, maxy, can_go_left);
     if (!field[x][y + 1])
-        findWays(x, y + 1, left - 1, way + '>', minx, miny, maxx, max(y + 1, maxy));
+        findWays(x, y + 1, left - 1, way + '>', minx, miny, maxx, max(y + 1, maxy), true);
 
     field[x][y] = 0;
 }
@@ -234,7 +247,7 @@ int main(int argc, char* argv[]) {
 
     int n;
     if (argc == 1)
-        n = 4;
+        n = 15;
     else
         n = stoi(argv[1]);
 
@@ -245,15 +258,24 @@ int main(int argc, char* argv[]) {
     field[n][n] = 1;
     field[x][y] = 1;
 
-    findWays(x, y, n - 2, "^^", x, y, n, n);
+    fstream fout;
+    fout.open("../Generated_figures/" + to_string(n) +".txt", ios::out);
 
-    for (f f : figures_set)
+    if (fout.is_open())
     {
-        cout << f.orientations << endl;
-        for (auto cord : f.cords)
-            cout << "(" << cord.first << ":" << cord.second << ")";
-        cout << endl;
-    }
+        findWays(x, y, n - 2, "^^", x, y, n, n, false);
 
+        for (const figure& f : figures_set)
+        {
+            fout << f.orientations << endl;
+            for (auto cord : f.cords)
+                fout << cord.first << " " << cord.second << " ";
+            fout << endl;
+        }
+    }
+    else
+        cout << "Error while opening file!";
+
+    fout.close();
     return 0;
 }
