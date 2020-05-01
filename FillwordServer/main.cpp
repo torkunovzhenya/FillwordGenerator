@@ -5,10 +5,9 @@ using namespace std;
 
 int main() {
 
-    vector<int> figs;
-    figs.push_back(3);
+    vector<int> figs = {4};
 
-    DancingLinks algo = DancingLinks(8, 9, figs);
+    DancingLinks algo = DancingLinks(4, 2, figs);
     algo.FindSolution();
 
     return 0;

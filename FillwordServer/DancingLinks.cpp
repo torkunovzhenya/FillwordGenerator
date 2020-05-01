@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <ctime>
 #include "DancingLinks.hpp"
 
@@ -42,82 +43,150 @@ void Figure::FindWays() {
 }
 
 
-DancingLinks::DancingLinks(int field_h, int field_w, std::vector<int> figures)
+std::pair<int, int> get_delta(int orient, int orientations, bool reflect, int h, int w)
+{
+    int half = orientations / 2;
+
+    if (reflect && orient >= half)
+    {
+        if ((orient - half) % 2 == 0)
+            return std::make_pair(w, h);
+
+        return std::make_pair(h, w);
+    }
+
+    if (orient % 2 == 0)
+        return std::make_pair(h, w);
+
+    return std::make_pair(w, h);
+}
+
+
+DancingLinks::DancingLinks(int field_h, int field_w, std::vector<int> lenghts)
 {
     srand((unsigned int)time(NULL));
     matrix = new LinkedMatrix(field_h, field_w);
     height = field_h;
     width = field_w;
 
-    if (figures.size() == 1 && figures[0] == 3)
+    for (int len : lenghts)
     {
-        std::vector<std::pair<int, int>> cords = std::vector<std::pair<int, int>>();
-        cords.push_back(std::make_pair(0, 0));
-        cords.push_back(std::make_pair(1, 0));
-        cords.push_back(std::make_pair(2, 0));
-        Figure* f1 = new Figure(3, cords);
+        std::string file = "../../PolyminoGenerator/Generated_figures/" + std::to_string(len) + ".txt";
+        std::fstream fin;
+        fin.open(file, std::ios::in);
 
-        cords.pop_back();
-        cords.push_back(std::make_pair(1, 1));
-        Figure* f2 = new Figure(3, cords);
+        int n;
+        fin >> n;
 
-        cords.pop_back();
-        cords.pop_back();
-        cords.push_back(std::make_pair(0, 1));
-        cords.push_back(std::make_pair(1, 1));
-        Figure* f3 = new Figure(3, cords);
+        std::vector<std::pair<int, int>> cords;
+        for (int number = 0; number < n; ++number)
+        {
+            int orientations, reflection, h, w;
+            fin >> orientations;
+            fin >> reflection;
+            fin >> h;
+            fin >> w;
 
-        cords.pop_back();
-        cords.push_back(std::make_pair(1, 0));
-        Figure* f4 = new Figure(3, cords);
-
-        std::vector<int> cells;
-
-        for (int i = 0; i < field_h - 1; ++i)
-            for (int j = 0; j < field_w - 1; ++j)
+            orientations *= (reflection + 1);
+            std::vector<int> cells;
+            for (int orient = 0; orient < orientations; ++orient)
             {
-                cells.clear();
+                cords.clear();
+                std::pair<int, int> delta = get_delta(orient, orientations, reflection, h, w);
 
-                for (auto *cell : f2->cells)
-                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
+                for (int l = 0; l < len; ++l)
+                {
+                    int x, y;
+                    fin >> x;
+                    fin >> y;
+                    cords.emplace_back(x, y);
+                }
 
-                matrix->AddLocation(cells);
+                for (int i = 0; i <= field_h - delta.first; ++i)
+                    for (int j = 0; j <= field_w - delta.second; ++j)
+                    {
+                        cells.clear();
+
+                        for (auto cell : cords)
+                            cells.push_back(field_w * (i + cell.first) + j + cell.second + 1);
+
+                        matrix->AddLocation(cells);
+                    }
             }
+        }
 
-        for (int i = 0; i < field_h - 1; ++i)
-            for (int j = 0; j < field_w - 1; ++j)
-            {
-                cells.clear();
-
-                for (auto *cell : f3->cells)
-                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-
-                matrix->AddLocation(cells);
-            }
-
-        for (int i = 0; i < field_h - 1; ++i)
-            for (int j = 0; j < field_w - 1; ++j)
-            {
-                cells.clear();
-
-                for (auto *cell : f4->cells)
-                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-
-                matrix->AddLocation(cells);
-            }
-
-        for (int i = 0; i < field_h - 2; ++i)
-            for (int j = 0; j < field_w; ++j)
-            {
-                cells.clear();
-
-                for (auto *cell : f1->cells)
-                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-
-                matrix->AddLocation(cells);
-            }
-        //Todo: Изменить тип фигур
+        fin.close();
     }
+
+//    if (lenghts.size() == 1 && lenghts[0] == 3)
+//    {
+//        std::vector<std::pair<int, int>> cords = std::vector<std::pair<int, int>>();
+//        cords.push_back(std::make_pair(0, 0));
+//        cords.push_back(std::make_pair(1, 0));
+//        cords.push_back(std::make_pair(2, 0));
+//        Figure* f1 = new Figure(3, cords);
+//
+//        cords.pop_back();
+//        cords.push_back(std::make_pair(1, 1));
+//        Figure* f2 = new Figure(3, cords);
+//
+//        cords.pop_back();
+//        cords.pop_back();
+//        cords.push_back(std::make_pair(0, 1));
+//        cords.push_back(std::make_pair(1, 1));
+//        Figure* f3 = new Figure(3, cords);
+//
+//        cords.pop_back();
+//        cords.push_back(std::make_pair(1, 0));
+//        Figure* f4 = new Figure(3, cords);
+//
+//        std::vector<int> cells;
+//
+//        for (int i = 0; i < field_h - 1; ++i)
+//            for (int j = 0; j < field_w - 1; ++j)
+//            {
+//                cells.clear();
+//
+//                for (auto *cell : f2->cells)
+//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
+//
+//                matrix->AddLocation(cells);
+//            }
+//
+//        for (int i = 0; i < field_h - 1; ++i)
+//            for (int j = 0; j < field_w - 1; ++j)
+//            {
+//                cells.clear();
+//
+//                for (auto *cell : f3->cells)
+//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
+//
+//                matrix->AddLocation(cells);
+//            }
+//
+//        for (int i = 0; i < field_h - 1; ++i)
+//            for (int j = 0; j < field_w - 1; ++j)
+//            {
+//                cells.clear();
+//
+//                for (auto *cell : f4->cells)
+//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
+//
+//                matrix->AddLocation(cells);
+//            }
+//
+//        for (int i = 0; i < field_h - 2; ++i)
+//            for (int j = 0; j < field_w; ++j)
+//            {
+//                cells.clear();
+//
+//                for (auto *cell : f1->cells)
+//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
+//
+//                matrix->AddLocation(cells);
+//            }
+//        //Todo: Изменить тип фигур
+//    }
 }
 
 
@@ -132,7 +201,7 @@ bool DancingLinks::FindSolution()
     }
     if (matrix->isColumnEmpty(col))
     {
-        std::cout << "MEEEEEEEEEEH" << std::endl;
+        //std::cout << "MEEEEEEEEEEH" << std::endl;
         return false;
     }
 

@@ -38,7 +38,7 @@ class DancingLinks
 
 public:
 
-    DancingLinks(int field_h, int field_w, std::vector<int> figures);
+    DancingLinks(int field_h, int field_w, std::vector<int> lenghts);
 
     bool FindSolution();
 
@@ -52,7 +52,6 @@ private:
     int width;
     LinkedMatrix* matrix = nullptr;
     std::vector<int> res;
-
 };
 
 

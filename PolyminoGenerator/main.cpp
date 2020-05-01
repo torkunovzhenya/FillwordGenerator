@@ -8,7 +8,12 @@ using namespace std;
 struct figure
 {
     int orientations = 1;
+    bool reflection = false;
+    int h, w;
+
     vector<pair<int, int>> cords;
+
+    vector<figure> possible_variants;
 
     friend bool operator==(const figure& left, const figure& right) { return left.cords == right.cords; }
 
@@ -104,6 +109,7 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
             return;
 
         f1.orientations *= 2;
+        f1.possible_variants.emplace_back(f2);
 
         // Rotate 180 degrees clockwise
         figure f3 = figure();
@@ -118,8 +124,6 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
             if (figures_set.find(f3) != figures_set.end())
                 return;
 
-            f1.orientations *= 2;
-
             // Rotate 270 degrees clockwise
             figure f4 = figure();
             for (int j = maxy; j >= miny; --j)
@@ -129,6 +133,10 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
 
             if (figures_set.find(f4) != figures_set.end())
                 return;
+
+            f1.orientations *= 2;
+            f1.possible_variants.emplace_back(f3);
+            f1.possible_variants.emplace_back(f4);
         }
     }
 
@@ -145,7 +153,12 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
         if (figures_set.find(f5) != figures_set.end())
             return;
 
-        if (f1.orientations != 1)
+        if (f1.orientations == 1)
+        {
+            f1.possible_variants.emplace_back(f5);
+            f1.reflection = true;
+        }
+        else
         {
             // Reflection rotate 90 degrees clockwise
             figure f6 = figure();
@@ -160,7 +173,13 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
                     return;
 
 
-                if (f1.orientations != 2)
+                if (f1.orientations == 2)
+                {
+                    f1.reflection = true;
+                    f1.possible_variants.emplace_back(f5);
+                    f1.possible_variants.emplace_back(f6);
+                }
+                else
                 {
                     // Reflection rotate 180 degrees clockwise
                     figure f7 = figure();
@@ -185,7 +204,11 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
                             if (figures_set.find(f8) != figures_set.end())
                                 return;
 
-                            f1.orientations *= 2;
+                            f1.reflection = true;
+                            f1.possible_variants.emplace_back(f5);
+                            f1.possible_variants.emplace_back(f6);
+                            f1.possible_variants.emplace_back(f7);
+                            f1.possible_variants.emplace_back(f8);
                         }
                     }
                 }
@@ -203,6 +226,8 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
 
 
     // Adding to figures set, if there is no this figure
+    f1.h = maxx - minx + 1;
+    f1.w = maxy - miny + 1;
     figures_set.insert(f1);
 }
 
@@ -247,7 +272,7 @@ int main(int argc, char* argv[]) {
 
     int n;
     if (argc == 1)
-        n = 15;
+        n = 5;
     else
         n = stoi(argv[1]);
 
@@ -265,12 +290,23 @@ int main(int argc, char* argv[]) {
     {
         findWays(x, y, n - 2, "^^", x, y, n, n, false);
 
+        fout << figures_set.size() << endl;
+
         for (const figure& f : figures_set)
         {
-            fout << f.orientations << endl;
+            fout << f.orientations << " " << f.reflection << " " << f.h << " " << f.w << endl;
+
             for (auto cord : f.cords)
                 fout << cord.first << " " << cord.second << " ";
+
             fout << endl;
+
+            for (const figure& orientation : f.possible_variants)
+            {
+                for (auto cord : orientation.cords)
+                    fout << cord.first << " " << cord.second << " ";
+                fout << endl;
+            }
         }
     }
     else
