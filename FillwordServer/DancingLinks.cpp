@@ -45,11 +45,9 @@ void Figure::FindWays() {
 
 std::pair<int, int> get_delta(int orient, int orientations, bool reflect, int h, int w)
 {
-    int half = orientations / 2;
-
-    if (reflect && orient >= half)
+    if (reflect && orient >= orientations)
     {
-        if ((orient - half) % 2 == 0)
+        if ((orient - orientations) % 2 == 0)
             return std::make_pair(w, h);
 
         return std::make_pair(h, w);

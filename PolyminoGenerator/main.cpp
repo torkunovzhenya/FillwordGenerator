@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
 
     int n;
     if (argc == 1)
-        n = 5;
+        n = 8;
     else
         n = stoi(argv[1]);
 
@@ -284,7 +284,7 @@ int main(int argc, char* argv[]) {
     field[x][y] = 1;
 
     fstream fout;
-    fout.open("../Generated_figures/" + to_string(n) +".txt", ios::out);
+    fout.open("../Generated_figures/" + to_string(n) + ".txt", ios::out);
 
     if (fout.is_open())
     {
