@@ -16,20 +16,26 @@ class Figure
         Cell(int x, int y);
 
         std::vector<Cell*> neighbours;
+        bool visited = false;
         int x, y;
+        char letter;
     };
 
 public:
 
-    Figure(int length, std::vector<std::pair<int, int>> nodes);
+    Figure(int h, int w, const std::vector<std::pair<int, int>>& nodes);
 
-    void FindWays();
+    std::vector<Cell*> GetRandomWay(const std::string& word);
 
-    std::vector<char> GetRandomWay();
+private:
 
-//private:
+    int len;
 
     std::vector<Cell*> cells;
+
+    void fill_figure(std::vector<Cell*>& way, const std::string& word);
+
+    static bool dfs(Cell* c, std::vector<Figure::Cell*>& ans);
 };
 
 

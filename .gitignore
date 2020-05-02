@@ -5,3 +5,8 @@
 /PolyminoGenerator/.idea
 /PolyminoGenerator/cmake-build-debug
 /PolyminoGenerator/CMakeLists.txt
+/PolyminoGenerator/Generated_figures/*.txt
+
+/Dictsort/.idea
+/Dictsort/cmake-build-debug
+/Dictsort/CMakeLists.txt
