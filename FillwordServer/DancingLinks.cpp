@@ -398,6 +398,7 @@ std::vector<std::string> DancingLinks::getWordsForField(std::vector<Figure>& fig
 void DancingLinks::PrintRes()
 {
     std::vector<std::vector<char>> field = std::vector<std::vector<char>>(height, std::vector<char>(width));
+    std::vector<std::vector<char>> solved_field = std::vector<std::vector<char>>(height, std::vector<char>(width));
     std::vector<Figure> figures;
 
     for (int res_figure : res) {
@@ -423,24 +424,39 @@ void DancingLinks::PrintRes()
 
     std::vector<std::string> words = getWordsForField(figures);
 
+    int number = 0;
     for (int i = 0; i < figures.size(); ++i)
+    {
         for (auto cell : figures[i].GetRandomWay(words[i]))
+        {
             field[cell->x][cell->y] = cell->letter;
+            solved_field[cell->x][cell->y] = (char)(number + 60);
+        }
+        number++;
+    }
 
     std::fstream fout;
     fout.open("../Generated_field_with_words.txt", std::ios::out);
     for (const std::string& word : words)
         fout << word << std::endl;
 
-    fout << "-----------------------" << std::endl;
+    fout << "---------------------------------------------------------------------";
+    fout << std::endl;
 
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
             fout << field[i][j] << " ";
 
+        fout << "| ";
+
+        for (int j = 0; j < width; ++j)
+            fout << solved_field[i][j] << " ";
+
         fout << std::endl;
     }
+
+    fout.close();
 }
 
 
