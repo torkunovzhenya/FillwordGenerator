@@ -23,19 +23,22 @@ class Figure
 
 public:
 
-    Figure(int h, int w, const std::vector<std::pair<int, int>>& nodes);
+    Figure(int minx, int miny, int maxx, int maxy, std::vector<std::pair<int, int>> cords);
+
+    int getLen();
 
     std::vector<Cell*> GetRandomWay(const std::string& word);
 
 private:
 
     int len;
-
     std::vector<Cell*> cells;
+
+    bool dfs(Cell* c, std::vector<Figure::Cell*>& ans);
 
     void fill_figure(std::vector<Cell*>& way, const std::string& word);
 
-    static bool dfs(Cell* c, std::vector<Figure::Cell*>& ans);
+    friend bool operator<(const Figure& left, const Figure& right);
 };
 
 
@@ -58,6 +61,8 @@ private:
     int width;
     LinkedMatrix* matrix = nullptr;
     std::vector<int> res;
+
+    std::vector<std::string> getWordsForField(std::vector<Figure>& figures);
 };
 
 

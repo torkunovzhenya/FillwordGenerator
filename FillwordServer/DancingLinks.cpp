@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
+#include <algorithm>
 #include <unordered_map>
 #include "DancingLinks.hpp"
 
@@ -12,15 +13,24 @@
 Figure::Cell::Cell(int x, int y) : x(x), y(y) {}
 
 
-Figure::Figure(int h, int w, const std::vector<std::pair<int, int>>& cords)
+Figure::Figure(int minx, int miny, int maxx, int maxy, std::vector<std::pair<int, int>> cords)
 {
+    int h = maxx - minx + 1;
+    int w = maxy - miny + 1;
+
+    for (int i = 0; i < cords.size(); ++i)
+    {
+        cords[i].first -= minx;
+        cords[i].second -= miny;
+    }
+
     len = cords.size();
     std::vector<std::vector<Cell*>> figure_field =
             std::vector<std::vector<Cell*>>(h, std::vector<Cell*>(w, nullptr));
 
     for (auto cord : cords)
     {
-        cells.push_back(new Cell(cord.first, cord.second));
+        cells.push_back(new Cell(cord.first + minx, cord.second + miny));
         figure_field[cord.first][cord.second] = cells.back();
     }
 
@@ -28,6 +38,9 @@ Figure::Figure(int h, int w, const std::vector<std::pair<int, int>>& cords)
         for (int j = 0; j < w; ++j)
         {
             Cell* cell = figure_field[i][j];
+            if (cell == nullptr)
+                continue;
+
             if (i > 0 && figure_field[i - 1][j] != nullptr)
                 cell->neighbours.push_back(figure_field[i - 1][j]);
             if (i < h - 1 && figure_field[i + 1][j] != nullptr)
@@ -56,10 +69,14 @@ bool Figure::dfs(Figure::Cell *c, std::vector<Figure::Cell*>& ans)
     ans.push_back(c);
     c->visited = true;
 
+    if (ans.size() == len)
+        return true;
+
     std::vector<Cell*> neighbours;
 
     for (auto n : c->neighbours)
-        neighbours.push_back(n);
+        if (!n->visited)
+            neighbours.push_back(n);
 
     while (!neighbours.empty())
     {
@@ -107,6 +124,18 @@ std::vector<Figure::Cell*> Figure::GetRandomWay(const std::string& word)
 
         order.pop_back();
     }
+}
+
+
+int Figure::getLen()
+{
+    return len;
+}
+
+
+bool operator<(const Figure &left, const Figure &right)
+{
+    return left.len < right.len;
 }
 
 
@@ -304,21 +333,81 @@ bool DancingLinks::FindSolution()
 }
 
 
+std::vector<std::string> DancingLinks::getWordsForField(std::vector<Figure>& figures)
+{
+    std::sort(figures.begin(), figures.end());
+    std::vector<std::string> words;
+
+    int n = figures.size();
+    int i = 0;
+
+    while (i < n)
+    {
+        int previ = i;
+        int len = figures[i].getLen();
+
+        // Enumerating figures with the same length
+        while (i < n && figures[i].getLen() == len)
+            ++i;
+
+        // Open file with words with current len
+        std::fstream fin;
+        fin.open("../../Dictsort/Words/" + std::to_string(len) + ".txt", std::ios::in);
+
+        // Reading the number of words
+        int total_words;
+        fin >> total_words;
+
+        // Generating random indexes to read corresponding lines
+        std::vector<int> genered_indexes;
+        for (int gi = previ; gi < i; ++gi)
+            genered_indexes.push_back(rand() % total_words);
+
+        std::sort(genered_indexes.begin(), genered_indexes.end());
+
+        // Reading the first line which is "\n"
+        std::string word;
+        std::getline(fin, word);
+
+        // Index of a line in file
+        int str_num = 0;
+
+        // Index of index in generated_indexes vector
+        int word_index = 0;
+        while (word_index < genered_indexes.size())
+        {
+            if (word_index > 0 && genered_indexes[word_index - 1] == genered_indexes[word_index])
+                genered_indexes[word_index]++;
+
+            while (str_num <= genered_indexes[word_index])
+            {
+                std::getline(fin, word);
+                str_num++;
+            }
+
+            words.push_back(word);
+            word_index++;
+        }
+        fin.close();
+    }
+
+    return words;
+}
+
+
 void DancingLinks::PrintRes()
 {
-    std::vector<std::vector<int>> field = std::vector<std::vector<int>>(height, std::vector<int>(width));
+    std::vector<std::vector<char>> field = std::vector<std::vector<char>>(height, std::vector<char>(width));
+    std::vector<Figure> figures;
 
-    int number = 0;
-    for (int res_figure : res)
-    {
+    for (int res_figure : res) {
         int minx = height;
         int miny = width;
         int maxx = -1;
         int maxy = -1;
 
         std::vector<std::pair<int, int>> cords;
-        for (int cell : matrix->getFigureCells(res_figure))
-        {
+        for (int cell : matrix->getFigureCells(res_figure)) {
             int x = (cell - 1) / width;
             int y = (cell - 1) % width;
             cords.emplace_back(x, y);
@@ -329,29 +418,28 @@ void DancingLinks::PrintRes()
             maxy = std::max(maxy, y);
         }
 
-        for (auto cord : cords)
-        {
-            cord.first -= minx;
-            cord.second -= miny;
-        }
-
-        Figure f = Figure(maxx - minx + 1, maxy - miny + 1, cords);
-
-        std::string word;
-        for (int i = 0; i < cords.size(); ++i)
-            word += (char)(number + 60);
-        number++;
-
-        for (auto cell : f.GetRandomWay(word))
-            field[cell->x + minx][cell->y + miny] = cell->letter;
+        figures.emplace_back(minx, miny, maxx, maxy, cords);
     }
+
+    std::vector<std::string> words = getWordsForField(figures);
+
+    for (int i = 0; i < figures.size(); ++i)
+        for (auto cell : figures[i].GetRandomWay(words[i]))
+            field[cell->x][cell->y] = cell->letter;
+
+    std::fstream fout;
+    fout.open("../Generated_field_with_words.txt", std::ios::out);
+    for (const std::string& word : words)
+        fout << word << std::endl;
+
+    fout << "-----------------------" << std::endl;
 
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
-            std::cout << (char)(field[i][j] + 60) << " ";
+            fout << field[i][j] << " ";
 
-        std::cout << std::endl;
+        fout << std::endl;
     }
 }
 

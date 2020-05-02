@@ -1,31 +1,31 @@
 #include <iostream>
 #include <fstream>
-#include <map>
+#include <vector>
 
 using namespace std;
 
 int main() {
-    fstream fin, fout;
-    fin.open("word_rus.txt", ios::in);
-    fout.open("10.txt", ios::out);
 
-    map<int, int> m;
+    int n = 8;
+
+    fstream fin, fout;
+    fin.open("../Words/Dictionary.txt", ios::in);
+    fout.open("../Words/" + to_string(n) + ".txt", ios::out);
+
     string word;
+    vector<string> words;
     while (fin.good())
     {
         getline(fin, word);
 
-        m[word.length()]++;
-        if (word.length() >= 19)
-            fout << word << endl;
+        if (word.length() == n)
+            words.push_back(word);
     }
 
-    int sum = 17161;
-    for (int i = 0; i < 25; ++i) {
-        cout << i << " " << m[i] << endl;
-    }
+    fout << words.size() << endl;
+    for (const string& w : words)
+        fout << w << endl;
 
-    cout << sum;
     fin.close();
     fout.close();
 
