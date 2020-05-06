@@ -1,0 +1,14 @@
+﻿<Window x:Class="FillwordGame.GameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FillwordGame"
+        mc:Ignorable="d"
+        Title="GameWindow" Height="600" Width="1000" ResizeMode="CanMinimize">
+    <Canvas x:Name="CanvasMap" MouseLeftButtonDown="CanvasMap_MouseLeftButtonDown" MouseLeftButtonUp="CanvasMap_MouseLeftButtonUp" MouseMove="CanvasMap_MouseMove" MouseLeave="CanvasMap_MouseLeave">
+        <Image Source="pack://siteoforigin:,,,/Resources/assets/background.jpg" Width="994" Height="570" Stretch="UniformToFill"/>
+        <Label x:Name="connLabel" Content="Label" Canvas.Left="789" Canvas.Top="166" Height="143" Width="153" BorderBrush="White" Background="White" FontSize="18"/>
+
+    </Canvas>
+</Window>
