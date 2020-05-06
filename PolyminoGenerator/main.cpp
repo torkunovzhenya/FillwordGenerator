@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
 
     int n;
     if (argc == 1)
-        n = 8;
+        n = 10;
     else
         n = stoi(argv[1]);
 
