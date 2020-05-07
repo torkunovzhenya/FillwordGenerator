@@ -157,12 +157,16 @@ std::pair<int, int> get_delta(int orient, int orientations, bool reflect, int h,
 }
 
 
-DancingLinks::DancingLinks(int field_h, int field_w, std::vector<int> lenghts)
+DancingLinks::DancingLinks(int field_h, int field_w, int min_l, int max_l)
 {
     srand((unsigned int)time(NULL));
     matrix = new LinkedMatrix(field_h, field_w);
     height = field_h;
     width = field_w;
+
+    std::vector<int> lenghts;
+    for (int l = min_l; l <= max_l; ++l)
+        lenghts.push_back(l);
 
     for (int len : lenghts)
     {
@@ -212,76 +216,6 @@ DancingLinks::DancingLinks(int field_h, int field_w, std::vector<int> lenghts)
 
         fin.close();
     }
-
-//    if (lenghts.size() == 1 && lenghts[0] == 3)
-//    {
-//        std::vector<std::pair<int, int>> cords = std::vector<std::pair<int, int>>();
-//        cords.push_back(std::make_pair(0, 0));
-//        cords.push_back(std::make_pair(1, 0));
-//        cords.push_back(std::make_pair(2, 0));
-//        Figure* f1 = new Figure(3, cords);
-//
-//        cords.pop_back();
-//        cords.push_back(std::make_pair(1, 1));
-//        Figure* f2 = new Figure(3, cords);
-//
-//        cords.pop_back();
-//        cords.pop_back();
-//        cords.push_back(std::make_pair(0, 1));
-//        cords.push_back(std::make_pair(1, 1));
-//        Figure* f3 = new Figure(3, cords);
-//
-//        cords.pop_back();
-//        cords.push_back(std::make_pair(1, 0));
-//        Figure* f4 = new Figure(3, cords);
-//
-//        std::vector<int> cells;
-//
-//        for (int i = 0; i < field_h - 1; ++i)
-//            for (int j = 0; j < field_w - 1; ++j)
-//            {
-//                cells.clear();
-//
-//                for (auto *cell : f2->cells)
-//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-//
-//                matrix->AddLocation(cells);
-//            }
-//
-//        for (int i = 0; i < field_h - 1; ++i)
-//            for (int j = 0; j < field_w - 1; ++j)
-//            {
-//                cells.clear();
-//
-//                for (auto *cell : f3->cells)
-//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-//
-//                matrix->AddLocation(cells);
-//            }
-//
-//        for (int i = 0; i < field_h - 1; ++i)
-//            for (int j = 0; j < field_w - 1; ++j)
-//            {
-//                cells.clear();
-//
-//                for (auto *cell : f4->cells)
-//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-//
-//                matrix->AddLocation(cells);
-//            }
-//
-//        for (int i = 0; i < field_h - 2; ++i)
-//            for (int j = 0; j < field_w; ++j)
-//            {
-//                cells.clear();
-//
-//                for (auto *cell : f1->cells)
-//                    cells.push_back(field_w * (i + cell->x) + j + cell->y + 1);
-//
-//                matrix->AddLocation(cells);
-//            }
-//        //Todo: Изменить тип фигур
-//    }
 }
 
 
@@ -291,7 +225,6 @@ bool DancingLinks::FindSolution()
     if (col == nullptr)
     {
         std::cout << "URRRRRRRAAAAA" << std::endl;
-        PrintRes();
         return true;
     }
     if (matrix->isColumnEmpty(col))
@@ -395,7 +328,7 @@ std::vector<std::string> DancingLinks::getWordsForField(std::vector<Figure>& fig
 }
 
 
-void DancingLinks::PrintRes()
+std::string DancingLinks::getRes()
 {
     std::vector<std::vector<char>> field = std::vector<std::vector<char>>(height, std::vector<char>(width));
     std::vector<std::vector<char>> solved_field = std::vector<std::vector<char>>(height, std::vector<char>(width));
@@ -437,26 +370,47 @@ void DancingLinks::PrintRes()
 
     std::fstream fout;
     fout.open("../Generated_field_with_words.txt", std::ios::out);
+    std::string result = std::to_string(words.size()) + '\n';
     for (const std::string& word : words)
+    {
+        result += word + '\n';
         fout << word << std::endl;
+    }
 
-    fout << "---------------------------------------------------------------------";
+    fout << "----------------------------------";
     fout << std::endl;
 
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
+        {
             fout << field[i][j] << " ";
-
-        fout << "| ";
-
-        for (int j = 0; j < width; ++j)
-            fout << solved_field[i][j] << " ";
+            result += field[i][j];
+            result += ' ';
+        }
 
         fout << std::endl;
+        result += '\n';
+    }
+
+    fout << "----------------------------------";
+    fout << std::endl;
+
+    for (int i = 0; i < height; ++i)
+    {
+        for (int j = 0; j < width; ++j)
+        {
+            fout << solved_field[i][j] << " ";
+            result += solved_field[i][j];
+            result += ' ';
+        }
+
+        fout << std::endl;
+        result += i != (height - 1) ? "\n": "";
     }
 
     fout.close();
+    return result;
 }
 
 

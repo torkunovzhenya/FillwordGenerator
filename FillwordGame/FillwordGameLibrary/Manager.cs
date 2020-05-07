@@ -4,6 +4,15 @@ using System.Text;
 
 namespace FillwordGameLibrary
 {
+    enum Packet
+    {
+        P_ConnectionRequest = 0,
+        P_FieldGenRequest,
+        P_FieldAnsRequest,
+        P_DictionaryAddRequest
+    };
+
+
     public static class Manager
     {
         const string address = "127.0.0.1";
@@ -45,33 +54,89 @@ namespace FillwordGameLibrary
             return connected;
         }
 
-        public static string ReceiveMessage()
+
+        static void ChangeString(ref string s)
+        {
+            char begin = (char)('a' - 1);
+            char end = (char)(begin + 32);
+            string newS = "";
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] >= begin && s[i] <= end)
+                    newS += (char)(s[i] + 'а' - begin);
+                else
+                    newS += s[i];
+            }
+
+            s = newS;
+        }
+
+        static bool ProcessPacket(Packet packettype, ref string message)
+        {
+            switch (packettype)
+            {
+                case Packet.P_FieldAnsRequest:
+                    StringBuilder response = new StringBuilder();
+                    try
+                    {
+
+                        response.Clear();
+                        byte[] msglen = new byte[sizeof(int)];
+
+                        stream.Read(msglen, 0, sizeof(int));
+                        int len = BitConverter.ToInt32(msglen, 0);
+
+                        Console.WriteLine(len);
+
+                        byte[] msg = new byte[len];
+                        int bytes = stream.Read(msg, 0, len);
+
+                        response.Append(Encoding.UTF8.GetString(msg));
+                        message = response.ToString();
+
+                        ChangeString(ref message);
+                        
+                        return true;
+                    }
+                    catch
+                    {
+                        message = "Error";
+                        Console.WriteLine("Подключение прервано!"); //соединение было прервано
+                        Console.ReadLine();
+                        Disconnect();
+
+                        return false;
+                    }
+                default:
+                    Console.WriteLine("Unrecognized packet");
+                    return false;
+            }
+        }
+
+        public static string GenerationRequest()
         {
             string message = "";
             StringBuilder response = new StringBuilder();
-            try
-            {
-                response.Clear();
-                byte[] msglen = new byte[sizeof(int)];
 
-                stream.Read(msglen, 0, sizeof(int));
-                int len = BitConverter.ToInt32(msglen, 0);
+            Packet sendingPacket = Packet.P_FieldGenRequest;
+            byte[] data;
 
-                Console.WriteLine(len);
+            data = BitConverter.GetBytes((int)sendingPacket);
+            stream.Write(data, 0, data.Length);
+            
+            data = BitConverter.GetBytes(10);
+            stream.Write(data, 0, data.Length);
+            data = BitConverter.GetBytes(10);
+            stream.Write(data, 0, data.Length);
+            data = BitConverter.GetBytes(3);
+            stream.Write(data, 0, data.Length);
+            data = BitConverter.GetBytes(8);
+            stream.Write(data, 0, data.Length);
 
-                byte[] msg = new byte[len];
-                int bytes = stream.Read(msg, 0, len);
+            Packet packet;
+            int bytes = stream.Read(data, 0, sizeof(int));
 
-                response.Append(Encoding.UTF8.GetString(msg, 0, bytes));
-                message = response.ToString();
-            }
-            catch
-            {
-                message = "Error";
-                Console.WriteLine("Подключение прервано!"); //соединение было прервано
-                Console.ReadLine();
-                Disconnect();
-            }
+            ProcessPacket((Packet)BitConverter.ToInt32(data, 0), ref message);
 
             return message;
         }

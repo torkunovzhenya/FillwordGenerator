@@ -82,18 +82,18 @@ namespace FillwordGame
 
         public int ColorNum { get => color; }
 
-        public Tile(int x, int y, string letter, string color)
+        public Tile(int x, int y, char letter, char color)
         {
             this.x = x;
             this.y = y;
-            this.letter = letter[0];
-            this.color = color[0] - 60;
+            this.letter = letter;
+            this.color = color - 60;
             this.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
             this.Height = GameWindow.TILE_H;
             this.Width = GameWindow.TILE_W;
 
             text = new TextBlock();
-            text.Text = letter;
+            text.Text = letter.ToString();
             text.Height = this.Height;
             text.Width = this.Width;
             text.FontSize = this.Height * 0.6 + 2;
@@ -228,23 +228,7 @@ namespace FillwordGame
         private List<List<Tile>> field = new List<List<Tile>>();
         private TileWay way;
         private bool trackMouse = false;
-
-        static string words_info =
-            "апа " +
-            "док " +
-            "кот " +
-            "шум " +
-            "куль " +
-            "моня " +
-            "егерь " +
-            "коммунар " +
-            "голубушка " +
-            "презрение " +
-            "проступок " +
-            "затемнение " +
-            "исключение " +
-            "маршалловы " +
-            "стимулятор";
+        
         static string info =
             "м е т а з в ы к о д " +
             "н е н т я о л л а ш " +
@@ -271,12 +255,23 @@ namespace FillwordGame
         public GameWindow()
         {
             InitializeComponent();
+            
+            string generated = Manager.GenerationRequest();
+            connLabel.Content = generated;
+            string[] game_info = generated.Split(new char[] { '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            n = int.Parse(game_info[0]);
 
-            connLabel.Content = Manager.Connect() ? "Connected!" : "NOOOO";
-
-            string[] letters = info.Split(' ');
-            string[] colors = color_info.Split(' ');
-            words = words_info.Split(' ');
+            words = new string[n];
+            for (int i = 0; i < n; i++)
+                words[i] = game_info[i + 1];
+            
+            char[] letters = new char[w * h];
+            char[] colors = new char[w * h];
+            for (int i = 0; i < w * h; i++)
+            {
+                letters[i] = game_info[n + 1 + i][0];
+                colors[i] = game_info[n + 1 + w * h + i][0];
+            }
 
             n = words.Length;
             colorCounts = new int[n];
@@ -293,7 +288,7 @@ namespace FillwordGame
                 field.Add(new List<Tile>());
                 for (int j = 0; j < w; j++)
                 {
-                    colorCounts[colors[i * h + j][0] - 60]++;
+                    colorCounts[colors[i * h + j] - 60]++;
 
                     Tile tile = new Tile(i, j, letters[(i * h + j) % letters.Length], colors[(i * h + j) % letters.Length]);
                     field[i].Add(tile);

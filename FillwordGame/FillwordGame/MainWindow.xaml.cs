@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using FillwordGameLibrary;
 
 namespace FillwordGame
 {
@@ -32,6 +33,9 @@ namespace FillwordGame
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (!Manager.Connect())
+                return;
+
             GameWindow gameWindow = new GameWindow();
             gameWindow.Show();
             this.Close();

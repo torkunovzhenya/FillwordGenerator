@@ -47,11 +47,11 @@ class DancingLinks
 
 public:
 
-    DancingLinks(int field_h, int field_w, std::vector<int> lenghts);
+    DancingLinks(int field_h, int field_w, int min_l, int max_l);
 
     bool FindSolution();
 
-    void PrintRes();
+    std::string getRes();
 
     virtual ~DancingLinks();
 
