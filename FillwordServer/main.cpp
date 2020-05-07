@@ -71,6 +71,7 @@ bool ProcessPacket(int index, Packet packettype)
             ChangeString(msg);
             int msg_size = msg.size();
             int col_size = colors.size();
+            cout << col_size << endl;
 
             Packet sendingpacket = P_FieldAnsRequest;
             send(Connections[index], (char*)&sendingpacket, sizeof(int), 0);
