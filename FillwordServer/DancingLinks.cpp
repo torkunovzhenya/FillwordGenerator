@@ -328,11 +328,14 @@ std::vector<std::string> DancingLinks::getWordsForField(std::vector<Figure>& fig
 }
 
 
-std::string DancingLinks::getRes()
+std::string DancingLinks::getRes(std::vector<int>& colors)
 {
-    std::vector<std::vector<char>> field = std::vector<std::vector<char>>(height, std::vector<char>(width));
-    std::vector<std::vector<char>> solved_field = std::vector<std::vector<char>>(height, std::vector<char>(width));
+    std::vector<std::vector<char>> field =
+            std::vector<std::vector<char>>(height, std::vector<char>(width));
+    std::vector<std::vector<unsigned char>> solved_field =
+            std::vector<std::vector<unsigned char>>(height, std::vector<unsigned char>(width));
     std::vector<Figure> figures;
+    colors = std::vector<int>((height * width + 1) / 2);
 
     for (int res_figure : res) {
         int minx = height;
@@ -363,7 +366,7 @@ std::string DancingLinks::getRes()
         for (auto cell : figures[i].GetRandomWay(words[i]))
         {
             field[cell->x][cell->y] = cell->letter;
-            solved_field[cell->x][cell->y] = (char)(number + 60);
+            solved_field[cell->x][cell->y] = (unsigned char)number;
         }
         number++;
     }
@@ -386,11 +389,9 @@ std::string DancingLinks::getRes()
         {
             fout << field[i][j] << " ";
             result += field[i][j];
-            result += ' ';
         }
 
         fout << std::endl;
-        result += '\n';
     }
 
     fout << "----------------------------------";
@@ -400,14 +401,18 @@ std::string DancingLinks::getRes()
     {
         for (int j = 0; j < width; ++j)
         {
+            int num = i * width + j;
+            if (num % 2 != 0)
+                colors[num / 2] <<= 16;
+
+            colors[num / 2] += solved_field[i][j];
             fout << solved_field[i][j] << " ";
-            result += solved_field[i][j];
-            result += ' ';
         }
 
         fout << std::endl;
-        result += i != (height - 1) ? "\n": "";
     }
+    if (height * width % 2 == 1)
+        colors.back() <<= 16;
 
     fout.close();
     return result;

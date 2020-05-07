@@ -21,7 +21,7 @@ namespace FillwordGame
         private Border border;
         private TextBlock text;
 
-        public WordWrap(int number, string word)
+        public WordWrap(int number, string word, StackPanel wordsWrap)
         {
             this.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
             this.word = word;
@@ -38,13 +38,19 @@ namespace FillwordGame
             this.Children.Add(text);
 
             border = new Border();
+            border.Width = this.Width;
+            //border.Height = this.Height;
             border.BorderThickness = new Thickness(2);
             border.BorderBrush = new SolidColorBrush(Color.FromRgb(204, 119, 34));
             border.Child = this;
-
-            GameWindow.canvas.Children.Add(border);
-            Canvas.SetLeft(border, 550);
-            Canvas.SetTop(border, GameWindow.MARGIN_TOP + number * (this.Height + 10));
+            
+            wordsWrap.Children.Add(border);
+            border.Margin = new Thickness(5);
+            //GameWindow.canvas.Children.Add(border);
+            //int col = number / GameWindow.WORDS_IN_COL;
+            //int row = number % GameWindow.WORDS_IN_COL;
+            //Canvas.SetLeft(border, 550 + col * (this.Width + 10));
+            //Canvas.SetTop(border, GameWindow.MARGIN_TOP + row * (this.Height + 10));
         }
 
         public void CrossOut()
@@ -87,17 +93,19 @@ namespace FillwordGame
             this.x = x;
             this.y = y;
             this.letter = letter;
-            this.color = color - 60;
+            this.color = color;
             this.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
             this.Height = GameWindow.TILE_H;
             this.Width = GameWindow.TILE_W;
+            this.Orientation = Height > Width ? Orientation.Horizontal : Orientation.Vertical;
 
             text = new TextBlock();
             text.Text = letter.ToString();
-            text.Height = this.Height;
             text.Width = this.Width;
-            text.FontSize = this.Height * 0.6 + 2;
+            text.FontSize = Math.Min(this.Height, this.Width) * 0.6 + 2;
             text.TextAlignment = TextAlignment.Center;
+            text.VerticalAlignment = VerticalAlignment.Center;
+            text.HorizontalAlignment = HorizontalAlignment.Center;
 
             this.Children.Add(text);
 
@@ -209,16 +217,17 @@ namespace FillwordGame
     /// </summary>
     public partial class GameWindow : Window
     {
-        const int h = 10;
-        const int w = 10;
         const int FIELD_SIDE = 500;
-        public const int TILE_H = FIELD_SIDE / h;
-        public const int TILE_W = FIELD_SIDE / w;
+        public const int WORDS_IN_COL = 10;
         public const int MARGIN_LEFT = 30;
         public const int MARGIN_TOP = 30;
         
         public static Canvas canvas;
-        public static int n = 10;
+        public static int height;
+        public static int width;
+        public static int TILE_H;
+        public static int TILE_W;
+        public static int n;
         public static int WORD_H;
         public static int WORD_W;
         public static string[] words;
@@ -228,38 +237,27 @@ namespace FillwordGame
         private List<List<Tile>> field = new List<List<Tile>>();
         private TileWay way;
         private bool trackMouse = false;
-        
-        static string info =
-            "м е т а з в ы к о д " +
-            "н е н т я о л л а ш " +
-            "к ш и о н м и к о р " +
-            "а у е к о у т с п а " +
-            "е б о г м л п р у м " +
-            "и у л ь и я т е т с " +
-            "н к у л с р о з р о " +
-            "е ч ю л к г е р е р " +
-            "а н у м м е ш ь н п " +
-            "р а п а о к у м и е";
-        static string color_info =
-            "G G G G G I I = = = " +
-            "G G G > A I I I I I " +
-            "D D G > A J J F F I " +
-            "D D G > A J J J F I " +
-            "H D D D A J E E F I " +
-            "H D D @ H J J E F F " +
-            "H @ @ @ H J J E E F " +
-            "H H H H H B B B E F " +
-            "C C C C C B ? B E F " +
-            "C < < < C C ? ? E E";
+        private int minFigureLength;
+        private int maxFigureLength;
 
-        public GameWindow()
+
+        public GameWindow(int h, int w, int minL, int maxL)
         {
             InitializeComponent();
+
+            height = h;
+            TILE_H = FIELD_SIDE / height;
+
+            width = w;
+            TILE_W = FIELD_SIDE / width;
+
+            minFigureLength = minL;
+            maxFigureLength = maxL;
             
-            string generated = Manager.GenerationRequest();
-            connLabel.Content = generated;
-            string[] game_info = generated.Split(new char[] { '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            n = int.Parse(game_info[0]);
+            string generated = Manager.GenerationRequest(h, w, minL, maxL);
+            n = int.Parse(generated.Substring(0, generated.IndexOf('\n')));
+
+            string[] game_info = generated.Split(new char[] { '\n' }, n + 3 , StringSplitOptions.RemoveEmptyEntries);
 
             words = new string[n];
             for (int i = 0; i < n; i++)
@@ -269,28 +267,29 @@ namespace FillwordGame
             char[] colors = new char[w * h];
             for (int i = 0; i < w * h; i++)
             {
-                letters[i] = game_info[n + 1 + i][0];
-                colors[i] = game_info[n + 1 + w * h + i][0];
+                letters[i] = game_info[n + 1][i];
+                colors[i] = game_info[n + 2][i];
             }
 
             n = words.Length;
             colorCounts = new int[n];
-            WORD_H = (FIELD_SIDE + 10) / n - 10;
-            WORD_W = 10 * words[n - 1].Length + 10;
+            WORD_H = (FIELD_SIDE + 10) / WORDS_IN_COL - 10;
+            WORD_W = (WORD_H / 2) * words[n - 1].Length;
+            wordsWrap.Width = WORD_W + 20;
 
             canvas = CanvasMap;
 
             for (int i = 0; i < n; i++)
-                wordWraps.Add(new WordWrap(i, words[i]));
+                wordWraps.Add(new WordWrap(i, words[i], wordsWrap));
 
             for (int i = 0; i < h; i++)
             {
                 field.Add(new List<Tile>());
                 for (int j = 0; j < w; j++)
                 {
-                    colorCounts[colors[i * h + j] - 60]++;
+                    colorCounts[colors[i * w + j]]++;
 
-                    Tile tile = new Tile(i, j, letters[(i * h + j) % letters.Length], colors[(i * h + j) % letters.Length]);
+                    Tile tile = new Tile(i, j, letters[i * w + j], colors[i * w + j]);
                     field[i].Add(tile);
                 }
             }
@@ -307,7 +306,7 @@ namespace FillwordGame
             int col = (int)((x - MARGIN_LEFT - 3) / TILE_W);
             int row = (int)((y - MARGIN_TOP - 3) / TILE_H);
 
-            if (col >= h || row >= w)
+            if (col >= width || row >= height)
                 return;
 
             Tile tile = field[row][col];
@@ -350,7 +349,7 @@ namespace FillwordGame
             int col = (int)((x - MARGIN_LEFT - 3) / TILE_W);
             int row = (int)((y - MARGIN_TOP - 3) / TILE_H);
 
-            if (col >= h || row >= w)
+            if (col >= width || row >= height)
                 return;
 
             Tile tile = field[row][col];
@@ -361,6 +360,38 @@ namespace FillwordGame
                 way.ReturnTo(tile);
             else
                 way.AddTile(tile);
+        }
+
+        private void MenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Do you want to go to Menu?",
+                                          "Confirmation",
+                                          MessageBoxButton.YesNo,
+                                          MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.No)
+                return;
+
+            MainWindow mainWindow = new MainWindow();
+            mainWindow.Show();
+            this.Close();
+        }
+
+        private void SolveButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Do you want to see the solve?",
+                                          "Confirmation",
+                                          MessageBoxButton.YesNo,
+                                          MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.No)
+                return;
+            
+            for (int i = 0; i < height; i++)
+                for (int j = 0; j < width; j++)
+                    field[i][j].Open();
+
+            wordWraps.ForEach(word => word.CrossOut());
         }
     }
 }

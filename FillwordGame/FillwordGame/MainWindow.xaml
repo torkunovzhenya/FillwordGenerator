@@ -8,7 +8,7 @@
         Title="FillwordGame" Height="450" Width="768.677" ResizeMode="CanMinimize" Loaded="Window_Loaded">
     <Canvas x:Name="CanvasMap">
         <Image Source="pack://siteoforigin:,,,/Resources/assets/background.jpg" Width="762" Height="420" Stretch="UniformToFill"/>
-        <Button Content="Сгенерировать Поле" Canvas.Left="450" Canvas.Top="118" Width="251" Height="52" FontFamily="Georgia" FontSize="24" Click="Button_Click"/>
+        <Button Content="Сгенерировать Поле" Canvas.Left="460" Canvas.Top="140" Width="251" Height="52" FontFamily="Georgia" FontSize="24" Click="Button_Click"/>
 
     </Canvas>
 </Window>

@@ -51,7 +51,7 @@ public:
 
     bool FindSolution();
 
-    std::string getRes();
+    std::string getRes(std::vector<int>& colors);
 
     virtual ~DancingLinks();
 

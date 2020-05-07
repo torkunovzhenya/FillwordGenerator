@@ -36,7 +36,7 @@ namespace FillwordGame
             if (!Manager.Connect())
                 return;
 
-            GameWindow gameWindow = new GameWindow();
+            GameWindow gameWindow = new GameWindow(15, 15, 3, 8);
             gameWindow.Show();
             this.Close();
         }

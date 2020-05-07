@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
@@ -60,7 +61,9 @@ namespace FillwordGameLibrary
             char begin = (char)('a' - 1);
             char end = (char)(begin + 32);
             string newS = "";
-            for (int i = 0; i < s.Length; i++)
+            int i = 0;
+
+            for (i = 0; i < s.Length; i++)
             {
                 if (s[i] >= begin && s[i] <= end)
                     newS += (char)(s[i] + 'а' - begin);
@@ -92,9 +95,23 @@ namespace FillwordGameLibrary
                         int bytes = stream.Read(msg, 0, len);
 
                         response.Append(Encoding.UTF8.GetString(msg));
-                        message = response.ToString();
+                        message = response.ToString() + '\n';
+
+                        stream.Read(msglen, 0, sizeof(int));
+                        int col_len = BitConverter.ToInt32(msglen, 0);
 
                         ChangeString(ref message);
+
+                        for (int i = 0; i < col_len; i++)
+                        {
+                            stream.Read(msglen, 0, sizeof(int));
+                            int pair = BitConverter.ToInt32(msglen, 0);
+
+                            char first = (char)(pair >> 16);
+                            char second = (char)pair;
+                            message += first;
+                            message += second;
+                        }
                         
                         return true;
                     }
@@ -113,7 +130,7 @@ namespace FillwordGameLibrary
             }
         }
 
-        public static string GenerationRequest()
+        public static string GenerationRequest(int h, int w, int minL, int maxL)
         {
             string message = "";
             StringBuilder response = new StringBuilder();
@@ -124,13 +141,13 @@ namespace FillwordGameLibrary
             data = BitConverter.GetBytes((int)sendingPacket);
             stream.Write(data, 0, data.Length);
             
-            data = BitConverter.GetBytes(10);
+            data = BitConverter.GetBytes(h);
             stream.Write(data, 0, data.Length);
-            data = BitConverter.GetBytes(10);
+            data = BitConverter.GetBytes(w);
             stream.Write(data, 0, data.Length);
-            data = BitConverter.GetBytes(3);
+            data = BitConverter.GetBytes(minL);
             stream.Write(data, 0, data.Length);
-            data = BitConverter.GetBytes(8);
+            data = BitConverter.GetBytes(maxL);
             stream.Write(data, 0, data.Length);
 
             Packet packet;

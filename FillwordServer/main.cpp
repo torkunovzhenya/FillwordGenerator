@@ -61,18 +61,25 @@ bool ProcessPacket(int index, Packet packettype)
             DancingLinks algo = DancingLinks(h, w, min_l, max_l);
 
             string msg;
+            vector<int> colors;
+
             if (algo.FindSolution())
-                msg = algo.getRes();
+                msg = algo.getRes(colors);
             else
                 msg = "Error";
 
             ChangeString(msg);
             int msg_size = msg.size();
+            int col_size = colors.size();
 
             Packet sendingpacket = P_FieldAnsRequest;
             send(Connections[index], (char*)&sendingpacket, sizeof(int), 0);
             send(Connections[index], (char*)&msg_size, sizeof(int), 0);
             send(Connections[index], msg.c_str(), msg_size, 0);
+
+            send(Connections[index], (char*)&col_size, sizeof(int), 0);
+            for (int i = 0; i < col_size; ++i)
+                send(Connections[index], (char*)&colors[i], sizeof(int), 0);
 
             return true;
         }
