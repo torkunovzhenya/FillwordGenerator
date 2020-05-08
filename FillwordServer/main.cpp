@@ -60,15 +60,15 @@ bool ProcessPacket(int index, Packet packettype)
                 bytes_minl == SOCKET_ERROR || bytes_maxl == SOCKET_ERROR)
                 return false;
 
-            DancingLinks algo = DancingLinks(h, w, min_l, max_l);
+            DancingLinks* algo = new DancingLinks(h, w, min_l, max_l);
             cout << (createDictionaryWords(dict) ? "true" : "false") << endl;
-            algo.setDict(dict);
+            algo->setDict(dict);
 
             string msg;
             vector<int> colors;
 
-            if (algo.FindSolution())
-                msg = algo.getRes(colors);
+            if (algo->FindSolution())
+                msg = algo->getRes(colors);
             else
                 msg = "Error";
 
@@ -86,6 +86,7 @@ bool ProcessPacket(int index, Packet packettype)
             for (int i = 0; i < col_size; ++i)
                 send(Connections[index], (char*)&colors[i], sizeof(int), 0);
 
+            delete algo;
             return true;
         }
         case P_DictionaryAddRequest:

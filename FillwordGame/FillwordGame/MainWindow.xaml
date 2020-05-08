@@ -313,6 +313,11 @@
         <ComboBox x:Name="Combo_W_Copy" Canvas.Left="645" Canvas.Top="258" Width="102" IsReadOnly="True" FontSize="24" Style="{DynamicResource ComboBoxStyle1}" SelectedIndex="0" Foreground="#FFCC7722"/>
         <Label Content="Select dictionary" Canvas.Left="476" Canvas.Top="258
                " Width="169" Foreground="#FFCC7722" FontSize="20" Height="39" FontWeight="Bold"/>
+        <Border x:Name="generatingPlate" Canvas.Left="250" Canvas.Top="150" BorderBrush="#FFCC7722" BorderThickness="5" Visibility="Hidden">
+            <StackPanel Background="#FFE8AC6F" Height="130" Width="300" ClipToBounds="True">
+                <TextBlock x:Name="generatingLabel" TextWrapping="Wrap" Text="Generating..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="48" FontFamily="Georgia" Foreground="#FFCC7722" Margin="12,33,12,0"/>
+            </StackPanel>
+        </Border>
 
     </Canvas>
 </Window>

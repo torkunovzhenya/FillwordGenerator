@@ -421,6 +421,7 @@ std::string DancingLinks::getRes(std::vector<int>& colors)
 
 DancingLinks::~DancingLinks()
 {
+    std::cout << "DancingLinks destructor called" << std::endl;
     delete matrix;
 }
 

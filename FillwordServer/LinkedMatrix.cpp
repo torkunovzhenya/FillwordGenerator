@@ -213,5 +213,26 @@ std::vector<int> LinkedMatrix::getFigureCells(int row)
 
 LinkedMatrix::~LinkedMatrix()
 {
+    Node* row = root;
+    while (row->down != nullptr)
+    {
+        row = row->down;
 
+        Node* node = row->right;
+        while (node->right != row)
+        {
+            node = node->right;
+            delete node->left;
+        }
+
+        delete node;
+    }
+
+    for (int i = 1; i <= rows; ++i)
+        delete row_heads[i];
+
+    for (int i = 1; i <= cols; ++i)
+        delete col_heads[i];
+
+    delete root;
 }

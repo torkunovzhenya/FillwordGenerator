@@ -46,11 +46,6 @@ namespace FillwordGame
             
             wordsWrap.Children.Add(border);
             border.Margin = new Thickness(5);
-            //GameWindow.canvas.Children.Add(border);
-            //int col = number / GameWindow.WORDS_IN_COL;
-            //int row = number % GameWindow.WORDS_IN_COL;
-            //Canvas.SetLeft(border, 550 + col * (this.Width + 10));
-            //Canvas.SetTop(border, GameWindow.MARGIN_TOP + row * (this.Height + 10));
         }
 
         public void CrossOut()
@@ -241,7 +236,7 @@ namespace FillwordGame
         private int maxFigureLength;
 
 
-        public GameWindow(int h, int w, int minL, int maxL)
+        public GameWindow(int h, int w, int minL, int maxL, string generated)
         {
             InitializeComponent();
 
@@ -254,10 +249,12 @@ namespace FillwordGame
             minFigureLength = minL;
             maxFigureLength = maxL;
             
-            string generated = Manager.GenerationRequest(h, w, minL, maxL);
             n = int.Parse(generated.Substring(0, generated.IndexOf('\n')));
 
-            string[] game_info = generated.Split(new char[] { '\n' }, n + 3 , StringSplitOptions.RemoveEmptyEntries);
+            Console.WriteLine(generated.Length);
+            string[] game_info = generated.Split(new char[] { '\n' }, n + 3);
+            foreach (string info in game_info)
+                Console.WriteLine(info.Length);
 
             words = new string[n];
             for (int i = 0; i < n; i++)

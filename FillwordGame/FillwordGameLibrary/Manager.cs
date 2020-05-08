@@ -100,7 +100,10 @@ namespace FillwordGameLibrary
                         stream.Read(msglen, 0, sizeof(int));
                         int col_len = BitConverter.ToInt32(msglen, 0);
 
+                        Console.WriteLine(col_len);
+
                         ChangeString(ref message);
+                        int prev_len = message.Length;
 
                         for (int i = 0; i < col_len; i++)
                         {
@@ -112,6 +115,9 @@ namespace FillwordGameLibrary
                             message += first;
                             message += second;
                         }
+
+                        Console.WriteLine(message.Length - prev_len);
+                        Console.WriteLine(message.Length);
                         
                         return true;
                     }
