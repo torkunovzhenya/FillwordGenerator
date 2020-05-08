@@ -285,7 +285,7 @@ std::vector<std::string> DancingLinks::getWordsForField(std::vector<Figure>& fig
 
         // Open file with words with current len
         std::fstream fin;
-        fin.open("../../Dictsort/Words/" + std::to_string(len) + ".txt", std::ios::in);
+        fin.open("../Dictionaries/" + dictionary + "/" + std::to_string(len) + ".txt", std::ios::in);
 
         // Reading the number of words
         int total_words;
@@ -422,4 +422,10 @@ std::string DancingLinks::getRes(std::vector<int>& colors)
 DancingLinks::~DancingLinks()
 {
     delete matrix;
+}
+
+
+void DancingLinks::setDict(const std::string& dict)
+{
+    dictionary = dict;
 }

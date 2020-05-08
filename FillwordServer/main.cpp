@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <wchar.h>
 #include "DancingLinks.hpp"
+#include "DictionaryWorker.hpp"
 
 using namespace std;
 
@@ -46,6 +47,7 @@ bool ProcessPacket(int index, Packet packettype)
         {
             int h, w;
             int min_l, max_l;
+            string dict = "Russian2";
 
             int bytes_h = recv(Connections[index], (char*)&h, sizeof(int), 0);
             int bytes_w = recv(Connections[index], (char*)&w, sizeof(int), 0);
@@ -53,12 +55,14 @@ bool ProcessPacket(int index, Packet packettype)
             int bytes_maxl = recv(Connections[index], (char*)&max_l, sizeof(int), 0);
 
             cout << h << " " << w << " " << min_l << " " << max_l << endl;
-            if (h > 1000 || w > 1000 || min_l > 1000 || max_l > 1000 ||
+            if (h > 40 || w > 40 || min_l > 40 || max_l > 40 ||
                 bytes_h == SOCKET_ERROR || bytes_w == SOCKET_ERROR ||
                 bytes_minl == SOCKET_ERROR || bytes_maxl == SOCKET_ERROR)
                 return false;
 
             DancingLinks algo = DancingLinks(h, w, min_l, max_l);
+            cout << (createDictionaryWords(dict) ? "true" : "false") << endl;
+            algo.setDict(dict);
 
             string msg;
             vector<int> colors;
@@ -83,6 +87,10 @@ bool ProcessPacket(int index, Packet packettype)
                 send(Connections[index], (char*)&colors[i], sizeof(int), 0);
 
             return true;
+        }
+        case P_DictionaryAddRequest:
+        {
+
         }
         default:
         {

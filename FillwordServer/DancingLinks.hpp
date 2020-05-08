@@ -49,11 +49,13 @@ public:
 
     DancingLinks(int field_h, int field_w, int min_l, int max_l);
 
+    void setDict(const std::string& dict);
+
     bool FindSolution();
 
     std::string getRes(std::vector<int>& colors);
 
-    virtual ~DancingLinks();
+    ~DancingLinks();
 
 private:
 
@@ -61,6 +63,7 @@ private:
     int width;
     LinkedMatrix* matrix = nullptr;
     std::vector<int> res;
+    std::string dictionary;
 
     std::vector<std::string> getWordsForField(std::vector<Figure>& figures);
 };
