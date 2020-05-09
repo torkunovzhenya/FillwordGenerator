@@ -8,7 +8,7 @@ namespace FillwordGameLibrary
 {
     enum Packet
     {
-        P_ConnectionRequest = 0,
+        P_ConnectionRequest = 1,
         P_FieldGenRequest,
         P_StopGenRequest,
         P_FieldAnsRequest,
@@ -26,9 +26,11 @@ namespace FillwordGameLibrary
 
         static TcpClient client = null;
         static NetworkStream stream = null;
-        private static  bool connected = false;
+        private static bool connected = false;
+        private static bool busy = false;
 
         public static bool Connected { get => connected; }
+        public static bool isBusy { get => busy; }
 
 
         public static void Connect()
@@ -169,7 +171,13 @@ namespace FillwordGameLibrary
             {
                 switch (packettype)
                 {
+                    case Packet.P_ConnectionRequest:
+
+                        connected = true;
+                        return true;
                     case Packet.P_FieldAnsRequest:
+
+                        int english = ReceiveInt();
 
                         message = ReceiveString();
 
@@ -180,7 +188,8 @@ namespace FillwordGameLibrary
 
                         int col_len = ReceiveInt();
 
-                        ChangeString(ref message);
+                        if (english == 0)
+                            ChangeString(ref message);
 
                         for (int i = 0; i < col_len; i++)
                         {
@@ -193,7 +202,13 @@ namespace FillwordGameLibrary
                         }
 
                         return true;
+                    case Packet.P_DictionaryAddAnsRequest:
+
+                        int ans = ReceiveInt();
+                        message = ans == 0 ? "Error" : "Good";
+                        return true;
                     default:
+
                         Console.WriteLine("Unrecognized packet");
                         return false;
                 }
@@ -211,6 +226,7 @@ namespace FillwordGameLibrary
 
         public static string GenerationRequest(int h, int w, int minL, int maxL, string dict)
         {
+            busy = true;
             string message = "Error";
             try
             {
@@ -231,12 +247,36 @@ namespace FillwordGameLibrary
                 message = "Error";
             }
 
+            busy = false;
             return message;
         }
 
 
-        public static string DictionaryAddRequest(string filename)
+        public static void CheckConnetion()
         {
+            busy = true;
+            string message = "";
+            try
+            {
+                Packet sendingPacket = Packet.P_ConnectionRequest;
+
+                Send(sendingPacket);
+
+                Packet receivedPacket = ReceivePacket();
+                ProcessPacket(receivedPacket, ref message);
+            }
+            catch
+            {
+                connected = false;
+                Disconnect();
+            }
+            busy = false;
+        }
+
+
+        public static string DictionaryAddRequest(string filename, string newName)
+        {
+            busy = true;
             string message = "";
             try
             {
@@ -245,6 +285,7 @@ namespace FillwordGameLibrary
                     Packet sendingPacket = Packet.P_DictionaryAddRequest;
                     
                     Send(sendingPacket);
+                    Send(newName);
                     Send((int)file.Length);
                     Send(file);
 
@@ -258,11 +299,13 @@ namespace FillwordGameLibrary
                 Console.WriteLine("Error while sending dictionary");
             }
 
+            busy = false;
             return message;
         }
 
         public static string CancelGenerating()
         {
+            busy = true;
             string message = "Error";
             try
             {
@@ -274,12 +317,14 @@ namespace FillwordGameLibrary
                 message = "Error";
             }
 
+            busy = false;
             return message;
         }
 
 
         public static string GetDictionaries()
         {
+            busy = true;
             string message = "Error";
             try
             {
@@ -293,6 +338,7 @@ namespace FillwordGameLibrary
                 message = "Error";
             }
 
+            busy = false;
             return message;
         }
 

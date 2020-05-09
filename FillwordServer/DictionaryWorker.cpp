@@ -76,32 +76,30 @@ bool createDictionaryWords(const string& dict)
 }
 
 
-bool addNewDictionary(const string& name)
+bool checkDictionary(const string& name)
 {
+    string s;
     fstream dict;
-    dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::out);
+    dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::in);
 
-
-
-    dict.close();
-}
-
-
-void checkDictionary(const string& dict)
-{
-    bool exist = false;
-    for (const string& d : getDictionaries())
+    int diff = 'a' - 'A';
+    char ch;
+    bool flag = true;
+    while (dict.get(ch))
     {
-        if (d == dict)
-        {
-            exist = true;
-            break;
-        }
+        if (ch >= 'A' && ch <= 'Z')
+            s += to_string(ch + diff);
+        else if ((ch >= 'a' && ch <= 'z') || ch == '\n')
+            s += ch;
+        else if (ch == ' ')
+            continue;
+        else
+            flag = false;
     }
+    dict.close();
 
-//    if (!exist)
-//    {
-        createDictionaryWords(dict);
-        return;
-//    }
+    dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::out);
+    dict << s;
+    dict.close();
+    return flag;
 }

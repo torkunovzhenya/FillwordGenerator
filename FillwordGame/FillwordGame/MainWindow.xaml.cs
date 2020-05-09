@@ -30,12 +30,18 @@ namespace FillwordGame
         private static int dict_index_selected = 0;
 
         private static string[] dicts = { "Russian1", "Russian2" };
+        private static string newDict;
+        private static string newDictName;
+        private static bool windowActive;
         private static bool stopped = false;
         private static bool field_generating = false;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            windowActive = true;
+            ConnectionCheckingAsync();
 
             for (int i = 3; i <= 25; i++)
             {
@@ -68,15 +74,40 @@ namespace FillwordGame
             Combo_Dict.SelectedIndex = dict_index_selected;
         }
 
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Closed(object sender, EventArgs e)
         {
-            ConnectToServerAsync();
+            windowActive = false;
+        }
+
+
+        private async void ConnectionCheckingAsync()
+        {
+            while (windowActive)
+            {
+                await ConnectToServerAsync();
+
+                if (Manager.Connected)
+                {
+                    connectionLabel.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
+                    connectionLabel.Text = "Connected to server";
+                }
+                else
+                {
+                    connectionLabel.Background = new SolidColorBrush(Color.FromRgb(131, 90, 48));
+                    connectionLabel.Text = "No connection to server";
+                }
+
+                await Task.Run(() => Thread.Sleep(500));
+
+                while (Manager.isBusy)
+                    await Task.Run(() => Thread.Sleep(500));
+            }
         }
 
 
         private async Task ConnectToServerAsync()
         {
+            Manager.CheckConnetion();
             if (!Manager.Connected)
                 await Task.Run(() => Manager.Connect());
         }
@@ -188,24 +219,20 @@ namespace FillwordGame
             this.Close();
         }
 
-        private void DictAddButton_Click(object sender, RoutedEventArgs e)
+        private async void DictAddButton_Click(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            dlg.FileName = "Dictionary"; // Default file name
-            dlg.DefaultExt = ".txt"; // Default file extension
-            dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
-
-            // Show open file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
-
-            // Process open file dialog box results
-            if (result == true)
+            if (!Manager.Connected)
             {
-                // Open document
-                string filename = dlg.FileName;
-
-                Manager.DictionaryAddRequest(filename);
+                await ConnectToServerAsync();
+                if (!Manager.Connected)
+                    return;
             }
+
+            dictionaryAddPlate.Visibility = Visibility.Visible;
+            DisableWindowElements();
+
+            addButton.IsEnabled = false;
+            fileNameLabel.Text = "Dictionary.txt path";
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -228,6 +255,82 @@ namespace FillwordGame
             dicts = dicts_m.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
             UpdateDictionaries();
+        }
+
+
+        private bool CheckNewDictName(string name)
+        {
+            if (name.Length == 0)
+                return false;
+
+            foreach (char ch in name)
+            {
+                if (!(ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'))
+                    return false;
+            }
+            return true;
+        }
+        
+        private async Task DictAnswerWaitAsync()
+        {
+            string ans = await Task.Run(() => Manager.DictionaryAddRequest(newDict, newDictName));
+            if (ans == "Good")
+                MessageBox.Show("Dictionary successfully added! Update dictionaries!");
+            else
+                MessageBox.Show("Failed while adding a dictionary");
+
+        }
+
+        private async void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Manager.Connected)
+            {
+                await ConnectToServerAsync();
+                if (!Manager.Connected)
+                {
+                    MessageBox.Show("No connection to server");
+                    return;
+                }
+            }
+
+            if (!CheckNewDictName(newDictNameField.Text))
+            {
+                MessageBox.Show("Incorrect name of new dictionary");
+                return;
+            }
+
+            newDictName = newDictNameField.Text;
+
+            Task.Run(() => DictAnswerWaitAsync());
+
+            dictionaryAddPlate.Visibility = Visibility.Hidden;
+            EnableWindowElements();
+        }
+
+        private void DictCancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            dictionaryAddPlate.Visibility = Visibility.Hidden;
+            EnableWindowElements();
+        }
+
+        private void ChangeDictButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = "Dictionary"; // Default file name
+            dlg.DefaultExt = ".txt"; // Default file extension
+            dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
+
+            // Show open file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process open file dialog box results
+            if (result == true)
+            {
+                newDict = dlg.FileName;
+
+                fileNameLabel.Text = newDict;
+                addButton.IsEnabled = true;
+            }
         }
     }
 }

@@ -68,6 +68,7 @@ namespace FillwordGame
         private bool active = false;
         private bool opened = false;
         private int color;
+        private int color_num;
         private Border border;
         private TextBlock text;
 
@@ -81,13 +82,14 @@ namespace FillwordGame
 
         public char Letter { get => letter; }
 
-        public int ColorNum { get => color; }
+        public int ColorNum { get => color_num; }
 
         public Tile(int x, int y, char letter, char color)
         {
             this.x = x;
             this.y = y;
             this.letter = letter;
+            this.color_num = color;
             this.color = color * 17569 % GameWindow.n;
             this.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
             this.Height = GameWindow.TILE_H;
@@ -251,10 +253,8 @@ namespace FillwordGame
         private int maxFigureLength;
 
 
-        public GameWindow(int h, int w, int minL, int maxL, string generated)
+        void PrepareField(int h, int w, int minL, int maxL, string generated, out char[] colors, out char[] letters)
         {
-            InitializeComponent();
-
             height = h;
             TILE_H = FIELD_SIDE / height;
 
@@ -263,31 +263,35 @@ namespace FillwordGame
 
             minFigureLength = minL;
             maxFigureLength = maxL;
-            
+
             n = int.Parse(generated.Substring(0, generated.IndexOf('\n')));
 
             wordsLeft = n;
             totalWordsLabel.Content = n;
             wordsLeftLabel.Content = n;
 
-            Console.WriteLine(generated.Length);
             string[] game_info = generated.Split(new char[] { '\n' }, n + 3);
-            foreach (string info in game_info)
-                Console.WriteLine(info.Length);
 
             words = new string[n];
             for (int i = 0; i < n; i++)
                 words[i] = game_info[i + 1];
-            
-            char[] letters = new char[w * h];
-            char[] colors = new char[w * h];
+
+            letters = new char[w * h];
+            colors = new char[w * h];
             for (int i = 0; i < w * h; i++)
             {
                 letters[i] = game_info[n + 1][i];
                 colors[i] = game_info[n + 2][i];
             }
+        }
 
-            n = words.Length;
+
+        public GameWindow(int h, int w, int minL, int maxL, string generated)
+        {
+            InitializeComponent();
+
+            PrepareField(h, w, minL, maxL, generated, out char[] colors, out char[] letters);
+            
             colorCounts = new int[n];
             WORD_H = (FIELD_SIDE + 10) / WORDS_IN_COL - 10;
             WORD_W = 17 * (words[n - 1].Length) + 20;
@@ -415,7 +419,7 @@ namespace FillwordGame
                 for (int j = 0; j < width; j++)
                     field[i][j].Open();
 
-            wordWraps.ForEach(word => word.CrossOut());
+            //wordWraps.ForEach(word => word.CrossOut());
         }
     }
 }

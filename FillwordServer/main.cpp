@@ -19,7 +19,7 @@ static DancingLinks* algos[MAX_CONNECTIONS];
 
 
 enum Packet {
-    P_ConnectionRequest = 0,
+    P_ConnectionRequest = 1,
     P_FieldGenRequest,
     P_StopGenRequest,
     P_FieldAnsRequest,
@@ -27,6 +27,41 @@ enum Packet {
     P_DictionaryAddRequest,
     P_DictionaryAddAnsRequest
 };
+
+bool ReadString(int index, string& s)
+{
+    int msg_size;
+
+    if (recv(Connections[index], (char*)&msg_size, sizeof(int), 0) <= 0)
+        return false;
+
+    char* msg = new char[msg_size + 1];
+    msg[msg_size] = '\0';
+
+    if (recv(Connections[index], msg, msg_size, 0) <= 0)
+        return false;
+
+    s = msg;
+
+    return true;
+}
+
+bool ReadInt(int index, int& n)
+{
+    return recv(Connections[index], (char*)&n, sizeof(int), 0) > 0;
+}
+
+
+bool Send(int index, Packet packet)
+{
+    return send(Connections[index], (char*)&packet, sizeof(int), 0) == sizeof(int);
+}
+
+
+bool Send(int index, int n)
+{
+    return send(Connections[index], (char*)&n, sizeof(int), 0) == sizeof(int);
+}
 
 
 void CancelThread(int index)
@@ -66,33 +101,28 @@ bool ProcessPacket(int index, Packet packettype)
 {
     switch(packettype)
     {
+        case P_ConnectionRequest:
+        {
+            Send(index, P_ConnectionRequest);
+            return true;
+        }
         case P_FieldGenRequest:
         {
             int h, w;
             int min_l, max_l;
 
-            if (recv(Connections[index], (char*)&h, sizeof(int), 0) <= 0)
+            if (!ReadInt(index, h))
                 return false;
-            if (recv(Connections[index], (char*)&w, sizeof(int), 0) <= 0)
+            if (!ReadInt(index, w))
                 return false;
-            if (recv(Connections[index], (char*)&min_l, sizeof(int), 0) <= 0)
+            if (!ReadInt(index, min_l))
                 return false;
-            if (recv(Connections[index], (char*)&max_l, sizeof(int), 0) <= 0)
+            if (!ReadInt(index, max_l))
                 return false;
 
             string dict;
-            int dict_msg_size;
-
-            if (recv(Connections[index], (char*)&dict_msg_size, sizeof(int), 0) <= 0)
+            if (!ReadString(index, dict))
                 return false;
-
-            char* dict_msg = new char[dict_msg_size + 1];
-            dict_msg[dict_msg_size] = '\0';
-
-            if (recv(Connections[index], dict_msg, dict_msg_size, 0) <= 0)
-                return false;
-
-            dict = dict_msg;
 
             cout << "Generation parameters for " << index << " client: " <<
                     h << " " << w << " " << min_l << " " << max_l << " " << dict << endl;
@@ -115,12 +145,15 @@ bool ProcessPacket(int index, Packet packettype)
 
             TerminateThread(t, 0);
 
-            ChangeString(msg);
             int msg_size = msg.size();
             int col_size = colors.size();
+            bool english = (msg[msg_size - 1] >= 'a' && msg[msg_size - 1] <= 'z');
 
-            Packet sendingpacket = P_FieldAnsRequest;
-            send(Connections[index], (char*)&sendingpacket, sizeof(int), 0);
+            if (!english)
+                ChangeString(msg);
+
+            Send(index, P_FieldAnsRequest);
+            Send(index, english);
             send(Connections[index], (char*)&msg_size, sizeof(int), 0);
             send(Connections[index], msg.c_str(), msg_size, 0);
 
@@ -137,24 +170,14 @@ bool ProcessPacket(int index, Packet packettype)
         case P_DictionaryAddRequest:
         {
             int len;
-
             string dict_name;
-            int dict_msg_size;
 
-            // Receiving the name of dictionary
-            if (recv(Connections[index], (char*)&dict_msg_size, sizeof(int), 0) <= 0)
+            // Receiving new dictionary name
+            if (!ReadString(index, dict_name))
                 return false;
-
-            char* dict_msg = new char[dict_msg_size + 1];
-            dict_msg[dict_msg_size] = '\0';
-
-            if (recv(Connections[index], dict_msg, dict_msg_size, 0) <= 0)
-                return false;
-
-            dict_name = dict_msg;
 
             // Receiving dictionary lenght
-            if (recv(Connections[index], (char*)&len, sizeof(int), 0) <= 0)
+            if (!ReadInt(index, len))
                 return false;
 
             fstream dict;
@@ -175,8 +198,9 @@ bool ProcessPacket(int index, Packet packettype)
 
             dict.close();
 
-            Packet sendingpacket = P_DictionaryAddAnsRequest;
-            send(Connections[index], (char*)&sendingpacket, sizeof(int), 0);
+            bool good = checkDictionary(dict_name);
+            Send(index, P_DictionaryAddAnsRequest);
+            Send(index, good);
 
             return true;
         }
@@ -209,7 +233,9 @@ void ClientHandler(int index)
     while (true)
     {
         int bytes = recv(Connections[index], (char *) &packettype, sizeof(Packet), 0);
-        cout << "Packet number " << (int)packettype << endl;
+
+        if (packettype != P_ConnectionRequest)
+            cout << "Packet number " << (int)packettype << endl;
 
         if (bytes == SOCKET_ERROR || bytes == 0 || !ProcessPacket(index, packettype))
             break;
