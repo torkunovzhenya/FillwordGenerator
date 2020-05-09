@@ -10,7 +10,9 @@ namespace FillwordGameLibrary
     {
         P_ConnectionRequest = 0,
         P_FieldGenRequest,
+        P_StopGenRequest,
         P_FieldAnsRequest,
+        P_DictionariesListRequest,
         P_DictionaryAddRequest,
         P_DictionaryAddAnsRequest,
         P_Error
@@ -24,10 +26,14 @@ namespace FillwordGameLibrary
 
         static TcpClient client = null;
         static NetworkStream stream = null;
+        private static  bool connected = false;
 
-        public static bool Connect()
+        public static bool Connected { get => connected; }
+
+
+        public static void Connect()
         {
-            bool connected = true;
+            connected = false;
             try
             {
                 client = new TcpClient(address, port);
@@ -54,8 +60,6 @@ namespace FillwordGameLibrary
                 Console.WriteLine(ex.Message);
                 Disconnect();
             }
-
-            return connected;
         }
 
         static Packet ReceivePacket()
@@ -73,6 +77,46 @@ namespace FillwordGameLibrary
             }
         }
 
+        static string ReceiveString()
+        {
+            try
+            {
+                StringBuilder response = new StringBuilder();
+                response.Clear();
+
+                byte[] msglen = new byte[sizeof(int)];
+                stream.Read(msglen, 0, sizeof(int));
+
+                int len = BitConverter.ToInt32(msglen, 0);
+
+                byte[] msg = new byte[len];
+                int bytes = stream.Read(msg, 0, len);
+
+                response.Append(Encoding.UTF8.GetString(msg));
+                return response.ToString();
+            }
+            catch
+            {
+                return "Error";
+            }
+        }
+
+        static int ReceiveInt()
+        {
+            try
+            {
+                byte[] number = new byte[sizeof(int)];
+                stream.Read(number, 0, sizeof(int));
+                return BitConverter.ToInt32(number, 0);
+            }
+            catch
+            {
+                Disconnect();
+                return -1;
+            }
+        }
+
+
         static void Send(Packet packet)
         {
             byte[] data;
@@ -87,10 +131,10 @@ namespace FillwordGameLibrary
             stream.Write(data, 0, data.Length);
         }
 
-        static void Send(long number)
+        static void Send(string s)
         {
-            byte[] data;
-            data = BitConverter.GetBytes(number);
+            Send(s.Length);
+            byte[] data = Encoding.UTF8.GetBytes(s);
             stream.Write(data, 0, data.Length);
         }
 
@@ -121,44 +165,26 @@ namespace FillwordGameLibrary
 
         static bool ProcessPacket(Packet packettype, ref string message)
         {
-            switch (packettype)
+            try
             {
-                case Packet.P_FieldAnsRequest:
-                    StringBuilder response = new StringBuilder();
-                    try
-                    {
+                switch (packettype)
+                {
+                    case Packet.P_FieldAnsRequest:
 
-                        response.Clear();
-                        byte[] msglen = new byte[sizeof(int)];
-
-                        stream.Read(msglen, 0, sizeof(int));
-                        int len = BitConverter.ToInt32(msglen, 0);
-
-                        Console.WriteLine(len);
-
-                        byte[] msg = new byte[len];
-                        int bytes = stream.Read(msg, 0, len);
-
-                        response.Append(Encoding.UTF8.GetString(msg));
-                        message = response.ToString();
+                        message = ReceiveString();
 
                         if (message == "Error")
                             return true;
 
                         message += '\n';
 
-                        stream.Read(msglen, 0, sizeof(int));
-                        int col_len = BitConverter.ToInt32(msglen, 0);
-
-                        Console.WriteLine(col_len);
+                        int col_len = ReceiveInt();
 
                         ChangeString(ref message);
-                        int prev_len = message.Length;
 
                         for (int i = 0; i < col_len; i++)
                         {
-                            stream.Read(msglen, 0, sizeof(int));
-                            int pair = BitConverter.ToInt32(msglen, 0);
+                            int pair = ReceiveInt();
 
                             char first = (char)(pair >> 16);
                             char second = (char)pair;
@@ -166,42 +192,44 @@ namespace FillwordGameLibrary
                             message += second;
                         }
 
-                        Console.WriteLine(message.Length - prev_len);
-                        Console.WriteLine(message.Length);
-                        
                         return true;
-                    }
-                    catch
-                    {
-                        message = "Error";
-                        Console.WriteLine("Подключение прервано!");
-                        Console.ReadLine();
-                        Disconnect();
-
+                    default:
+                        Console.WriteLine("Unrecognized packet");
                         return false;
-                    }
-                default:
-                    Console.WriteLine("Unrecognized packet");
-                    return false;
+                }
+            }
+            catch
+            {
+                message = "Error";
+                Console.WriteLine("Подключение прервано!");
+                Console.ReadLine();
+                Disconnect();
+
+                return false;
             }
         }
 
-        public static string GenerationRequest(int h, int w, int minL, int maxL)
+        public static string GenerationRequest(int h, int w, int minL, int maxL, string dict)
         {
-            string message = "";
-            StringBuilder response = new StringBuilder();
+            string message = "Error";
+            try
+            {
+                Packet sendingPacket = Packet.P_FieldGenRequest;
 
-            Packet sendingPacket = Packet.P_FieldGenRequest;
+                Send(sendingPacket);
+                Send(h);
+                Send(w);
+                Send(minL);
+                Send(maxL);
+                Send(dict);
 
-            Send(sendingPacket);
-            Send(h);
-            Send(w);
-            Send(minL);
-            Send(maxL);
-
-            Packet receivedPacket = ReceivePacket();
-
-            ProcessPacket(receivedPacket, ref message);
+                Packet receivedPacket = ReceivePacket();
+                ProcessPacket(receivedPacket, ref message);
+            }
+            catch
+            {
+                message = "Error";
+            }
 
             return message;
         }
@@ -221,7 +249,6 @@ namespace FillwordGameLibrary
                     Send(file);
 
                     Packet receivedPacket = ReceivePacket();
-
                     ProcessPacket(receivedPacket, ref message);
                 }
             }
@@ -234,6 +261,41 @@ namespace FillwordGameLibrary
             return message;
         }
 
+        public static string CancelGenerating()
+        {
+            string message = "Error";
+            try
+            {
+                Packet sendingPacket = Packet.P_StopGenRequest;
+                Send(sendingPacket);
+            }
+            catch
+            {
+                message = "Error";
+            }
+
+            return message;
+        }
+
+
+        public static string GetDictionaries()
+        {
+            string message = "Error";
+            try
+            {
+                Packet sendingPacket = Packet.P_DictionariesListRequest;
+                Send(sendingPacket);
+
+                message = ReceiveString();
+            }
+            catch
+            {
+                message = "Error";
+            }
+
+            return message;
+        }
+
 
         static void Disconnect()
         {
@@ -241,7 +303,7 @@ namespace FillwordGameLibrary
                 stream.Close();//отключение потока
             if (client != null)
                 client.Close();//отключение клиента
-            //Environment.Exit(0); //завершение процесса
+            connected = false;
         }
     }
 }

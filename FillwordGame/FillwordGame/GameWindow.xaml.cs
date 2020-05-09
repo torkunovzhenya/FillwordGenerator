@@ -88,7 +88,7 @@ namespace FillwordGame
             this.x = x;
             this.y = y;
             this.letter = letter;
-            this.color = color;
+            this.color = color * 17569 % GameWindow.n;
             this.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
             this.Height = GameWindow.TILE_H;
             this.Width = GameWindow.TILE_W;

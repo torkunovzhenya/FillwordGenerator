@@ -26,8 +26,12 @@ namespace FillwordGame
         private static int w_selected = 10;
         private static int minL_selected = 3;
         private static int maxL_selected = 8;
-        private static bool connected = false;
-        private static bool field_generated = false;
+        private static string dict_selected;
+        private static int dict_index_selected = 0;
+
+        private static string[] dicts = { "Russian1", "Russian2" };
+        private static bool stopped = false;
+        private static bool field_generating = false;
 
         public MainWindow()
         {
@@ -55,10 +59,13 @@ namespace FillwordGame
                 Combo_MaxL.Items.Add(tmax);
             }
 
+            UpdateDictionaries();
+
             Combo_H.SelectedIndex = h_selected - 3;
             Combo_W.SelectedIndex = w_selected - 3;
             Combo_MinL.SelectedIndex = minL_selected - 3;
             Combo_MaxL.SelectedIndex = maxL_selected - 3;
+            Combo_Dict.SelectedIndex = dict_index_selected;
         }
 
 
@@ -70,8 +77,8 @@ namespace FillwordGame
 
         private async Task ConnectToServerAsync()
         {
-            if (!connected)
-                connected = await Task.Run(() => Manager.Connect());
+            if (!Manager.Connected)
+                await Task.Run(() => Manager.Connect());
         }
 
 
@@ -79,7 +86,7 @@ namespace FillwordGame
         {
             generatingPlate.Visibility = Visibility.Visible;
 
-            while (!field_generated)
+            while (field_generating)
             {
                 generatingLabel.Text = "Generating";
 
@@ -94,34 +101,87 @@ namespace FillwordGame
         }
 
 
-        private async void GenerationButton_Click(object sender, RoutedEventArgs e)
+        private void UpdateDictionaries()
         {
-            if (!connected)
+            Combo_Dict.Items.Clear();
+            foreach (string dict in dicts)
             {
-                await ConnectToServerAsync();
-                if (!connected)
-                    return;
+                TextBlock tdict = new TextBlock();
+                tdict.Text = dict;
+                Combo_Dict.Items.Add(tdict);
             }
 
-            field_generated = false;
+            Combo_Dict.SelectedIndex = 0;
+        }
+
+
+        private void DisableWindowElements()
+        {
+            generatingButton.IsEnabled = false;
+            dictionaryAddButton.IsEnabled = false;
+            updateListButton.IsEnabled = false;
+            Combo_H.IsEnabled = false;
+            Combo_W.IsEnabled = false;
+            Combo_MinL.IsEnabled = false;
+            Combo_MaxL.IsEnabled = false;
+            Combo_Dict.IsEnabled = false;
+        }
+
+        private void EnableWindowElements()
+        {
+            generatingButton.IsEnabled = true;
+            dictionaryAddButton.IsEnabled = true;
+            updateListButton.IsEnabled = true;
+            Combo_H.IsEnabled = true;
+            Combo_W.IsEnabled = true;
+            Combo_MinL.IsEnabled = true;
+            Combo_MaxL.IsEnabled = true;
+            Combo_Dict.IsEnabled = true;
+        }
+
+
+        private async void GenerationButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Manager.Connected)
+            {
+                await ConnectToServerAsync();
+                if (!Manager.Connected)
+                    return;
+            }
 
             h_selected = Combo_H.SelectedIndex + 3;
             w_selected = Combo_W.SelectedIndex + 3;
             minL_selected = Combo_MinL.SelectedIndex + 3;
             maxL_selected = Combo_MaxL.SelectedIndex + 3;
+            dict_selected = ((TextBlock)Combo_Dict.SelectedItem).Text;
+            dict_index_selected = Combo_Dict.SelectedIndex;
 
-            GeneratingAsync();
-            string generated = await Task.Run(() => 
-                Manager.GenerationRequest(h_selected, w_selected, minL_selected, maxL_selected));
-            
-            field_generated = true;
-
-            if (generated == "Error")
+            if (maxL_selected < minL_selected)
             {
-                MessageBox.Show("Can't generate field with this parameters");
+                MessageBox.Show("Minimal lenght can't be higher than maximal lenght!");
                 return;
             }
 
+            stopped = false;
+
+            field_generating = true;
+            DisableWindowElements();
+
+            GeneratingAsync();
+            string generated = await Task.Run(() => 
+                Manager.GenerationRequest(h_selected, w_selected, minL_selected, maxL_selected, dict_selected));
+
+            field_generating = false;
+            EnableWindowElements();
+
+            if (stopped)
+                return;
+
+            if (generated == "Error")
+            {
+                MessageBox.Show("Can't generate field with this parameters!");
+                return;
+            }
 
             GameWindow gameWindow = new GameWindow(h_selected, w_selected, minL_selected, maxL_selected, generated);
             gameWindow.Show();
@@ -131,7 +191,7 @@ namespace FillwordGame
         private void DictAddButton_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            dlg.FileName = "Document"; // Default file name
+            dlg.FileName = "Dictionary"; // Default file name
             dlg.DefaultExt = ".txt"; // Default file extension
             dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
 
@@ -146,6 +206,28 @@ namespace FillwordGame
 
                 Manager.DictionaryAddRequest(filename);
             }
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            stopped = true;
+            field_generating = false;
+            Manager.CancelGenerating();
+        }
+
+        private async void UpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Manager.Connected)
+            {
+                await ConnectToServerAsync();
+                if (!Manager.Connected)
+                    return;
+            }
+
+            string dicts_m = await Task.Run(() => Manager.GetDictionaries());
+            dicts = dicts_m.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            UpdateDictionaries();
         }
     }
 }

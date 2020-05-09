@@ -234,6 +234,12 @@ DancingLinks::DancingLinks(int field_h, int field_w, int min_l, int max_l, const
 
 bool DancingLinks::FindSolution()
 {
+    if (should_stop)
+    {
+        std::cout << "Sad story" << std::endl;
+        return true;
+    }
+
     Node* col = matrix->ChooseCell();
     if (col == nullptr)
     {
@@ -458,4 +464,14 @@ std::string DancingLinks::getRes(std::vector<int>& colors)
 DancingLinks::~DancingLinks()
 {
     delete matrix;
+}
+
+void DancingLinks::Stop()
+{
+    should_stop = true;
+}
+
+bool DancingLinks::Stopped()
+{
+    return should_stop;
 }

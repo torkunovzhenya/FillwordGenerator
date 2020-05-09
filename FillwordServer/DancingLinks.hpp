@@ -53,12 +53,17 @@ public:
 
     std::string getRes(std::vector<int>& colors);
 
+    void Stop();
+
+    bool Stopped();
+
     ~DancingLinks();
 
 private:
 
     int height;
     int width;
+    bool should_stop = false;
     LinkedMatrix* matrix = nullptr;
     std::vector<int> res;
     std::vector<int> counts;
