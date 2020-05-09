@@ -157,22 +157,35 @@ std::pair<int, int> get_delta(int orient, int orientations, bool reflect, int h,
 }
 
 
-DancingLinks::DancingLinks(int field_h, int field_w, int min_l, int max_l)
+DancingLinks::DancingLinks(int field_h, int field_w, int min_l, int max_l, const std::string& dict)
 {
     srand((unsigned int)time(NULL));
     matrix = new LinkedMatrix(field_h, field_w);
     height = field_h;
     width = field_w;
+    dictionary = dict;
 
     std::vector<int> lenghts;
     for (int l = min_l; l <= max_l; ++l)
         lenghts.push_back(l);
+
+    std::fstream fin;
+    fin.open("../Dictionaries/" + dict + "/counts.txt", std::ios::in);
+
+    counts = std::vector<int>(21);
+    for (int k = 3; k <= 20; ++k)
+        fin >> counts[k];
+
+    fin.close();
 
     for (int len : lenghts)
     {
         std::string file = "../../PolyminoGenerator/Generated_figures/" + std::to_string(len) + ".txt";
         std::fstream fin;
         fin.open(file, std::ios::in);
+
+        if (!fin.is_open())
+            continue;
 
         int n;
         fin >> n;
@@ -224,31 +237,47 @@ bool DancingLinks::FindSolution()
     Node* col = matrix->ChooseCell();
     if (col == nullptr)
     {
-        std::cout << "URRRRRRRAAAAA" << std::endl;
+        std::cout << "Field successfully generated" << std::endl;
         return true;
     }
     if (matrix->isColumnEmpty(col))
-    {
-        //std::cout << "MEEEEEEEEEEH" << std::endl;
         return false;
-    }
 
     Node* node = col;
 
-    std::vector<Node*> variants;
+    // Contain all the variants for current field cell
+    std::vector<int> variants;
+    std::vector<int> lenghts;
     while (node->down != col)
     {
         node = node->down;
-        variants.push_back(node);
+
+        // Find the length of the figure
+        int len = 0;
+        Node* cell = node;
+        while (cell->right != node)
+        {
+            cell = cell->right;
+            ++len;
+        }
+
+        // If we cannot bring more figures with such length - skip
+        if (counts[len] == 0)
+            continue;
+
+        variants.push_back(node->row);
+        lenghts.push_back(len);
     }
+
     while (!variants.empty())
     {
         int rand_index = rand() % variants.size();
-        node = variants[rand_index];
+        int figure = variants[rand_index];
 
         // Hide rows with common columns with chosen
-        auto rows_hidden = matrix->ChooseRow(node->row);
-        res.push_back(node->row);
+        auto rows_hidden = matrix->ChooseRow(figure);
+        res.push_back(figure);
+        counts[lenghts[rand_index]]--;
 
         // Recursively trying to find solution
         if (FindSolution())
@@ -257,9 +286,12 @@ bool DancingLinks::FindSolution()
         // Restore hidden rows
         matrix->RestoreRows(rows_hidden);
         res.pop_back();
+        counts[lenghts[rand_index]]++;
 
         std::swap(variants[rand_index], variants.back());
+        std::swap(lenghts[rand_index], lenghts.back());
         variants.pop_back();
+        lenghts.pop_back();
     }
 
     return false;
@@ -287,32 +319,36 @@ std::vector<std::string> DancingLinks::getWordsForField(std::vector<Figure>& fig
         std::fstream fin;
         fin.open("../Dictionaries/" + dictionary + "/" + std::to_string(len) + ".txt", std::ios::in);
 
-        // Reading the number of words
-        int total_words;
-        fin >> total_words;
+        // Get the number of words with current len
+        int total_words = counts[len] + (i - previ);
+
+        std::vector<int> variants;
+        variants.reserve(total_words);
+        for (int j = 0; j < total_words; ++j)
+            variants.push_back(j);
 
         // Generating random indexes to read corresponding lines
         std::vector<int> genered_indexes;
         for (int gi = previ; gi < i; ++gi)
-            genered_indexes.push_back(rand() % total_words);
+        {
+            std::swap(variants[rand() % variants.size()], variants.back());
+            genered_indexes.push_back(variants.back());
+            variants.pop_back();
+        }
+        variants.clear();
 
         std::sort(genered_indexes.begin(), genered_indexes.end());
-
-        // Reading the first line which is "\n"
         std::string word;
-        std::getline(fin, word);
 
         // Index of a line in file
         int str_num = 0;
+        std::getline(fin, word);
 
         // Index of index in generated_indexes vector
         int word_index = 0;
         while (word_index < genered_indexes.size())
         {
-            if (word_index > 0 && genered_indexes[word_index - 1] == genered_indexes[word_index])
-                genered_indexes[word_index]++;
-
-            while (str_num <= genered_indexes[word_index])
+            while (str_num < genered_indexes[word_index])
             {
                 std::getline(fin, word);
                 str_num++;
@@ -421,12 +457,5 @@ std::string DancingLinks::getRes(std::vector<int>& colors)
 
 DancingLinks::~DancingLinks()
 {
-    std::cout << "DancingLinks destructor called" << std::endl;
     delete matrix;
-}
-
-
-void DancingLinks::setDict(const std::string& dict)
-{
-    dictionary = dict;
 }

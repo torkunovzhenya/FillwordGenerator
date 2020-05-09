@@ -47,9 +47,7 @@ class DancingLinks
 
 public:
 
-    DancingLinks(int field_h, int field_w, int min_l, int max_l);
-
-    void setDict(const std::string& dict);
+    DancingLinks(int field_h, int field_w, int min_l, int max_l, const std::string& dict);
 
     bool FindSolution();
 
@@ -63,6 +61,7 @@ private:
     int width;
     LinkedMatrix* matrix = nullptr;
     std::vector<int> res;
+    std::vector<int> counts;
     std::string dictionary;
 
     std::vector<std::string> getWordsForField(std::vector<Figure>& figures);

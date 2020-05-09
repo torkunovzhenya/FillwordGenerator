@@ -11,7 +11,8 @@ using namespace std;
 
 const char* adress = "127.0.0.1";
 int port = 1111;
-static SOCKET Connections[100];
+const int MAX_CONNECTIONS = 10;
+static SOCKET Connections[MAX_CONNECTIONS];
 static int connections_counter = 0;
 
 
@@ -19,7 +20,8 @@ enum Packet {
     P_ConnectionRequest = 0,
     P_FieldGenRequest,
     P_FieldAnsRequest,
-    P_DictionaryAddRequest
+    P_DictionaryAddRequest,
+    P_DictionaryAddAnsRequest
 };
 
 
@@ -47,22 +49,21 @@ bool ProcessPacket(int index, Packet packettype)
         {
             int h, w;
             int min_l, max_l;
-            string dict = "Russian2";
+            string dict = "NewDictionary";
 
-            int bytes_h = recv(Connections[index], (char*)&h, sizeof(int), 0);
-            int bytes_w = recv(Connections[index], (char*)&w, sizeof(int), 0);
-            int bytes_minl = recv(Connections[index], (char*)&min_l, sizeof(int), 0);
-            int bytes_maxl = recv(Connections[index], (char*)&max_l, sizeof(int), 0);
-
-            cout << h << " " << w << " " << min_l << " " << max_l << endl;
-            if (h > 40 || w > 40 || min_l > 40 || max_l > 40 ||
-                bytes_h == SOCKET_ERROR || bytes_w == SOCKET_ERROR ||
-                bytes_minl == SOCKET_ERROR || bytes_maxl == SOCKET_ERROR)
+            if (recv(Connections[index], (char*)&h, sizeof(int), 0) <= 0)
+                return false;
+            if (recv(Connections[index], (char*)&w, sizeof(int), 0) <= 0)
+                return false;
+            if (recv(Connections[index], (char*)&min_l, sizeof(int), 0) <= 0)
+                return false;
+            if (recv(Connections[index], (char*)&max_l, sizeof(int), 0) <= 0)
                 return false;
 
-            DancingLinks* algo = new DancingLinks(h, w, min_l, max_l);
+            cout << h << " " << w << " " << min_l << " " << max_l << endl;
+
             cout << (createDictionaryWords(dict) ? "true" : "false") << endl;
-            algo->setDict(dict);
+            DancingLinks* algo = new DancingLinks(h, w, min_l, max_l, dict);
 
             string msg;
             vector<int> colors;
@@ -82,16 +83,47 @@ bool ProcessPacket(int index, Packet packettype)
             send(Connections[index], (char*)&msg_size, sizeof(int), 0);
             send(Connections[index], msg.c_str(), msg_size, 0);
 
-            send(Connections[index], (char*)&col_size, sizeof(int), 0);
-            for (int i = 0; i < col_size; ++i)
-                send(Connections[index], (char*)&colors[i], sizeof(int), 0);
+            if (msg != "Error")
+            {
+                send(Connections[index], (char*)&col_size, sizeof(int), 0);
+                for (int i = 0; i < col_size; ++i)
+                    send(Connections[index], (char*)&colors[i], sizeof(int), 0);
+            }
 
             delete algo;
             return true;
         }
         case P_DictionaryAddRequest:
         {
+            int len;
 
+            if (recv(Connections[index], (char*)&len, sizeof(int), 0) <= 0)
+                return false;
+
+            string name = "NewDictionary";
+
+            fstream dict;
+
+            CreateDirectory(("../Dictionaries/" + name).c_str(), NULL);
+            dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::out);
+
+            if (!dict.is_open())
+                return false;
+
+            for (int i = 0; i < len; ++i)
+            {
+                byte byte;
+                recv(Connections[index], (char*)&byte, sizeof(byte), 0);
+                if (byte != 13)
+                    dict.put(byte);
+            }
+
+            dict.close();
+
+            Packet sendingpacket = P_DictionaryAddAnsRequest;
+            send(Connections[index], (char*)&sendingpacket, sizeof(int), 0);
+
+            return true;
         }
         default:
         {
@@ -110,12 +142,15 @@ void ClientHandler(int index)
         int bytes = recv(Connections[index], (char *) &packettype, sizeof(Packet), 0);
         cout << (int)packettype << endl;
 
-        if (bytes == SOCKET_ERROR || !ProcessPacket(index, packettype))
+        if (bytes == SOCKET_ERROR || bytes == 0 || !ProcessPacket(index, packettype))
             break;
     }
 
     cout << to_string(index) << " disconnected" << endl;
     closesocket(Connections[index]);
+
+    Connections[index] = 0;
+    connections_counter--;
 }
 
 
@@ -146,23 +181,38 @@ int main(int argc, char* argv[])
     {
         newConnetion = accept(sListen, (SOCKADDR*)&addr, &sizeofaddr);
 
+        if (connections_counter == MAX_CONNECTIONS)
+        {
+            cout << "Can't take new client" << endl;
+            closesocket(newConnetion);
+            continue;
+        }
+
         if (newConnetion == 0)
             cout << "Client failed to connect" << endl;
         else
         {
-            cout << "Client " << to_string(i) << " connected" << endl;
+            connections_counter++;
 
             string msg = "Connected!";
             int msg_size = msg.size();
             send(newConnetion, (char*)&msg_size, sizeof(int), 0);
             send(newConnetion, msg.c_str(), msg_size, 0);
 
-            Connections[connections_counter] = newConnetion;
-            connections_counter++;
+            int index = 0;
+            for (; index < MAX_CONNECTIONS; ++index)
+            {
+                cout << Connections[index] << endl;
+                if (Connections[index] == 0)
+                {
+                    Connections[index] = newConnetion;
+                    break;
+                }
+            }
 
-
+            cout << "Client " << to_string(index) << " connected" << endl;
             CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)ClientHandler,
-                         (LPVOID)i, 0, nullptr);
+                         (LPVOID)index, 0, nullptr);
         }
     }
 

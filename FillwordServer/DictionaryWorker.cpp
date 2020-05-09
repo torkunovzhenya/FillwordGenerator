@@ -44,6 +44,10 @@ bool createDictionaryWords(const string& dict)
     while (fin.good())
     {
         getline(fin, word);
+        int len = word.length();
+        vector<char> vector;
+        for (int i = 0; i < len; ++i)
+            vector.emplace_back(word[i]);
         if (word.length() <= 20)
             words[word.length()].push_back(word);
     }
@@ -54,14 +58,32 @@ bool createDictionaryWords(const string& dict)
         fstream fout;
         fout.open(path + to_string(n) + ".txt", ios::out);
 
-        fout << words[n].size() << endl;
         for (const string& w : words[n])
             fout << w << endl;
 
         fout.close();
     }
 
+    fstream fout;
+    fout.open(path + "counts.txt", ios::out);
+
+    for (int i = 3; i <= 20; ++i)
+        fout << words[i].size() << " ";
+
+    fout.close();
+
     return true;
+}
+
+
+bool addNewDictionary(const string& name)
+{
+    fstream dict;
+    dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::out);
+
+
+
+    dict.close();
 }
 
 

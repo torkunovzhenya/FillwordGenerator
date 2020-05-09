@@ -117,11 +117,26 @@ namespace FillwordGame
         public void Open()
         {
             opened = true;
+            int full = 257;
+            int gray = color * full / GameWindow.n;
+            int delta = color * full % GameWindow.n;
+            int delta_r = 0;
+            int delta_g = 0;
+            int delta_b = 0;
+
+            if (3 * delta < GameWindow.n)
+                delta_r = delta * full / GameWindow.n;
+            else if (3 * delta > 2 * GameWindow.n)
+                delta_g = delta * full / GameWindow.n;
+            else
+                delta_b = delta * full / GameWindow.n;
+
+
             this.Background = new SolidColorBrush(
-                Color.FromRgb((byte)(color * 256 / GameWindow.n), 
-                            (byte)(color * 256 / GameWindow.n), 
-                            (byte)(color * 256 / GameWindow.n)));
-            text.Foreground = (byte)(color * 256 / GameWindow.n) > 100 ? 
+                Color.FromRgb((byte)(gray + delta_r), 
+                            (byte)(gray + delta_g), 
+                            (byte)(gray + delta_b)));
+            text.Foreground = (byte)(color * full / GameWindow.n) > 100 ? 
                 Brushes.Black : Brushes.White;
         }
 
@@ -165,7 +180,7 @@ namespace FillwordGame
             }
         }
 
-        public string CheckWay()
+        public bool CheckWay()
         {
             bool sameColor = true;
             string reversed_word = "";
@@ -193,16 +208,15 @@ namespace FillwordGame
                     if (wordWrap.CheckWord(word))
                     {
                         wordWrap.CrossOut();
-                        wordWrap.UpdateLayout();
                         break;
                     }
                 }
                 tiles.ForEach(tile => tile.Open());
-                return reversed_word;
+                return true;
             }
 
             tiles.ForEach(tile => tile.Deactivate());
-            return null;
+            return false;
         }
     }
 
@@ -232,6 +246,7 @@ namespace FillwordGame
         private List<List<Tile>> field = new List<List<Tile>>();
         private TileWay way;
         private bool trackMouse = false;
+        private int wordsLeft;
         private int minFigureLength;
         private int maxFigureLength;
 
@@ -250,6 +265,10 @@ namespace FillwordGame
             maxFigureLength = maxL;
             
             n = int.Parse(generated.Substring(0, generated.IndexOf('\n')));
+
+            wordsLeft = n;
+            totalWordsLabel.Content = n;
+            wordsLeftLabel.Content = n;
 
             Console.WriteLine(generated.Length);
             string[] game_info = generated.Split(new char[] { '\n' }, n + 3);
@@ -271,7 +290,7 @@ namespace FillwordGame
             n = words.Length;
             colorCounts = new int[n];
             WORD_H = (FIELD_SIDE + 10) / WORDS_IN_COL - 10;
-            WORD_W = (WORD_H / 2) * words[n - 1].Length;
+            WORD_W = 17 * (words[n - 1].Length) + 20;
             wordsWrap.Width = WORD_W + 20;
 
             canvas = CanvasMap;
@@ -320,7 +339,11 @@ namespace FillwordGame
                 return;
 
             trackMouse = false;
-            way.CheckWay();
+            if (way.CheckWay())
+            {
+                wordsLeft--;
+                wordsLeftLabel.Content = wordsLeft;
+            }
         }
 
         private void CanvasMap_MouseLeave(object sender, MouseEventArgs e)
@@ -329,7 +352,11 @@ namespace FillwordGame
                 return;
 
             trackMouse = false;
-            way.CheckWay();
+            if (way.CheckWay())
+            {
+                wordsLeft--;
+                wordsLeftLabel.Content = wordsLeft;
+            }
         }
 
         private void CanvasMap_MouseMove(object sender, MouseEventArgs e)
@@ -376,7 +403,7 @@ namespace FillwordGame
 
         private void SolveButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Do you want to see the solve?",
+            MessageBoxResult result = MessageBox.Show("Do you want to see full solution?",
                                           "Confirmation",
                                           MessageBoxButton.YesNo,
                                           MessageBoxImage.Question);

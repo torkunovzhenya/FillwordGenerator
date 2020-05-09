@@ -11,8 +11,12 @@
         <ScrollViewer x:Name="scrollBar" Canvas.Left="550" Canvas.Top="30" CanContentScroll="True" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="wordsWrap" Height="500" Width="120" Background="Transparent" ScrollViewer.CanContentScroll="True"/>
         </ScrollViewer>
-        <Button Content="Menu" Canvas.Left="760" Canvas.Top="30" Width="200" Height="55" BorderBrush="#FFCC7722" BorderThickness="5" Background="#FFE8AC6F" FontFamily="Georgia" Padding="0" Foreground="#FFCC7722" FontSize="36" Click="MenuButton_Click" IsCancel="True" SnapsToDevicePixels="True"/>
-        <Button Content="Show solve" Canvas.Left="760" Canvas.Top="475" Width="200" Height="55" BorderBrush="#FFCC7722" BorderThickness="5" Background="#FFE8AC6F" FontFamily="Georgia" Padding="0" Foreground="#FFCC7722" FontSize="30" Click="SolveButton_Click" IsCancel="True" SnapsToDevicePixels="True"/>
-
+        <Button Content="Menu" Canvas.Left="796" Canvas.Top="30" Width="164" Height="56" BorderBrush="#FFCC7722" BorderThickness="5" Background="#FFE8AC6F" FontFamily="Georgia" Padding="0" Foreground="#FFCC7722" FontSize="36" Click="MenuButton_Click" IsCancel="True" SnapsToDevicePixels="True"/>
+        <Button Content="Show solution" Canvas.Left="796" Canvas.Top="469" Width="164" Height="56" BorderBrush="#FFCC7722" BorderThickness="5" Background="#FFE8AC6F" FontFamily="Georgia" Padding="0" Foreground="#FFCC7722" FontSize="24" Click="SolveButton_Click" SnapsToDevicePixels="True" VerticalAlignment="Center"/>
+        <Rectangle Fill="#FFE8AC6F" Height="144" Canvas.Left="796" Stroke="#FFCC7722" Canvas.Top="198" Width="164"/>
+        <Label Content="Total Words" Canvas.Left="796" Canvas.Top="198" Width="164" Foreground="#FFCC7722" FontFamily="Georgia" FontSize="24" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+        <Label Content="Words Left" Canvas.Left="796" Canvas.Top="269" Width="164" Foreground="#FFCC7722" FontFamily="Georgia" FontSize="24" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+        <Label x:Name="totalWordsLabel" Content="" Canvas.Left="796" Canvas.Top="232" Width="164" Foreground="#FFCC7722" FontFamily="Georgia" FontSize="24" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+        <Label x:Name="wordsLeftLabel" Content="" Canvas.Left="796" Canvas.Top="306" Width="164" Foreground="#FFCC7722" FontFamily="Georgia" FontSize="24" FontWeight="Bold" HorizontalContentAlignment="Center"/>
     </Canvas>
 </Window>

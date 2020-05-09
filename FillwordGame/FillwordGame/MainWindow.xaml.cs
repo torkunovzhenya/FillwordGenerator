@@ -44,7 +44,7 @@ namespace FillwordGame
                 Combo_W.Items.Add(tw);
             }
 
-            for (int i = 3; i <= 15; i++)
+            for (int i = 3; i <= 10; i++)
             {
                 TextBlock tmin = new TextBlock();
                 tmin.Text = i.ToString();
@@ -61,22 +61,17 @@ namespace FillwordGame
             Combo_MaxL.SelectedIndex = maxL_selected - 3;
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            await ConnectToServerAsync();
+            ConnectToServerAsync();
         }
+
 
         private async Task ConnectToServerAsync()
         {
-            connected = await Task.Run(() => Manager.Connect());
-        }
-
-        private async Task Wait()
-        {
-            for (int i = 0; i < 100; i++)
-            {
-                Console.WriteLine(i);
-            }
+            if (!connected)
+                connected = await Task.Run(() => Manager.Connect());
         }
 
 
@@ -118,13 +113,39 @@ namespace FillwordGame
             GeneratingAsync();
             string generated = await Task.Run(() => 
                 Manager.GenerationRequest(h_selected, w_selected, minL_selected, maxL_selected));
-
+            
             field_generated = true;
+
+            if (generated == "Error")
+            {
+                MessageBox.Show("Can't generate field with this parameters");
+                return;
+            }
 
 
             GameWindow gameWindow = new GameWindow(h_selected, w_selected, minL_selected, maxL_selected, generated);
             gameWindow.Show();
             this.Close();
+        }
+
+        private void DictAddButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = "Document"; // Default file name
+            dlg.DefaultExt = ".txt"; // Default file extension
+            dlg.Filter = "Text documents (.txt)|*.txt"; // Filter files by extension
+
+            // Show open file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process open file dialog box results
+            if (result == true)
+            {
+                // Open document
+                string filename = dlg.FileName;
+
+                Manager.DictionaryAddRequest(filename);
+            }
         }
     }
 }
