@@ -41,20 +41,8 @@ namespace FillwordGameLibrary
                 client = new TcpClient(address, port);
                 stream = client.GetStream();
 
-                StringBuilder response = new StringBuilder();
-                byte[] msglen = new byte[sizeof(int)];
-
-                stream.Read(msglen, 0, sizeof(int));
-                int len = BitConverter.ToInt32(msglen, 0);
-
-                Console.WriteLine(len);
-
-                byte[] msg = new byte[len];
-
-                int bytes = stream.Read(msg, 0, len);
-                response.Append(Encoding.UTF8.GetString(msg, 0, bytes));
-
-                connected = (response.ToString() == "Connected!");
+                string ans = ReceiveString();
+                connected = (ans == "Connected!");
             }
             catch (Exception ex)
             {

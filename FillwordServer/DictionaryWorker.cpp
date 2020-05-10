@@ -88,14 +88,14 @@ bool checkDictionary(const string& name)
     while (dict.get(ch))
     {
         if (ch >= 'A' && ch <= 'Z')
-            s += to_string(ch + diff);
+            s += ch + diff;
         else if ((ch >= 'a' && ch <= 'z') || ch == '\n')
             s += ch;
         else if (ch == ' ')
             continue;
         else
             flag = false;
-    }
+}
     dict.close();
 
     dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::out);

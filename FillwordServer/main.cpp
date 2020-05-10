@@ -199,6 +199,12 @@ bool ProcessPacket(int index, Packet packettype)
             dict.close();
 
             bool good = checkDictionary(dict_name);
+
+            if (!good)
+            {
+                DeleteFile(("../Dictionaries/" + dict_name + "/Dictionary.txt").c_str());
+                RemoveDirectory(("../Dictionaries/" + dict_name).c_str());
+            }
             Send(index, P_DictionaryAddAnsRequest);
             Send(index, good);
 
