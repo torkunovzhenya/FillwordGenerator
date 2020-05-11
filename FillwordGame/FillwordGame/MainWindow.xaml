@@ -329,18 +329,18 @@
                     </Border>
                     <Button Content="Change" Style="{StaticResource ResourceKey=GameButtonStyle}" Width="100" Height="30" Margin="7,0,0,0" FontSize="20" BorderThickness="3" Click="ChangeDictButton_Click" />
                 </StackPanel>
-                <Label Foreground="#FFCC7722" FontFamily="Georgia" FontSize="16">
-                    Enter the name using only english letters
+                <Label Foreground="#FFCC7722" FontFamily="Georgia" FontSize="14">
+                    Enter the name using english letters, numbers and "__"
                 </Label>
                 <TextBox x:Name="newDictNameField" FontSize="20" Margin="10,0" Background="#FFEEC398" Foreground="#FFCC7722" BorderBrush="#FFCC7722" BorderThickness="2" AllowDrop="False"/>
                 <StackPanel Height="130" Orientation="Horizontal">
                     <TextBox TextWrapping="Wrap" Text="Add your own dictionary with the following requirements: 
                              
-                             -Only English words
+                             -ONLY English words or ONLY Russian words, don't mix them!
                              
                              -One word on each line
                              
-                             -No other symbols except english letters and line breaks" Width="350" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#FFB35B04" FontSize="18" FontFamily="Georgia" Padding="5,0,0,0" VerticalContentAlignment="Stretch" Margin="0,4,0,-0.4" IsEnabled="False"/>
+                             -No other symbols except english letters and line breaks" Width="350" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#FFB35B04" FontSize="16" FontFamily="Georgia" Padding="5,0,0,0" VerticalContentAlignment="Stretch" Margin="0,4,0,-0.4" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Height="50" Orientation="Horizontal">
                     <Button x:Name="addButton" Content="Add" Style="{StaticResource ResourceKey=GameButtonStyle}" Width="100" Height="30" Margin="69,0,0,0" FontSize="20" BorderThickness="3" Click="AddButton_Click" />

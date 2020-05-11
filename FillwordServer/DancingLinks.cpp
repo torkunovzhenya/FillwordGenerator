@@ -413,31 +413,14 @@ std::string DancingLinks::getRes(std::vector<int>& colors)
         number++;
     }
 
-    std::fstream fout;
-    fout.open("../Generated_field_with_words.txt", std::ios::out);
     std::string result = std::to_string(words.size()) + '\n';
     for (const std::string& word : words)
-    {
         result += word + '\n';
-        fout << word << std::endl;
-    }
-
-    fout << "----------------------------------";
-    fout << std::endl;
 
     for (int i = 0; i < height; ++i)
-    {
         for (int j = 0; j < width; ++j)
-        {
-            fout << field[i][j] << " ";
             result += field[i][j];
-        }
 
-        fout << std::endl;
-    }
-
-    fout << "----------------------------------";
-    fout << std::endl;
 
     for (int i = 0; i < height; ++i)
     {
@@ -448,15 +431,12 @@ std::string DancingLinks::getRes(std::vector<int>& colors)
                 colors[num / 2] <<= 16;
 
             colors[num / 2] += solved_field[i][j];
-            fout << solved_field[i][j] << " ";
         }
-
-        fout << std::endl;
     }
+
     if (height * width % 2 == 1)
         colors.back() <<= 16;
 
-    fout.close();
     return result;
 }
 

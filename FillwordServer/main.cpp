@@ -25,7 +25,9 @@ enum Packet {
     P_FieldAnsRequest,
     P_DictionariesListRequest,
     P_DictionaryAddRequest,
-    P_DictionaryAddAnsRequest
+    P_DictionaryAddAnsRequest,
+    P_DictAlreadyExist,
+    P_DictNotExist
 };
 
 bool ReadString(int index, string& s)
@@ -51,16 +53,56 @@ bool ReadInt(int index, int& n)
     return recv(Connections[index], (char*)&n, sizeof(int), 0) > 0;
 }
 
+bool ReadDict(int index, const string& dict_name)
+{
+    int len;
+
+    // Receiving dictionary lenght
+    if (!ReadInt(index, len))
+        return false;
+
+    fstream dict;
+    dict.open("../Dictionaries/" + dict_name + "/Dictionary.txt", ios::out);
+
+    if (!dict.is_open())
+        return false;
+
+    for (int i = 0; i < len; ++i)
+    {
+        byte byte;
+        recv(Connections[index], (char*)&byte, sizeof(byte), 0);
+        if (byte != 13)
+            dict.put(byte);
+    }
+
+    dict.close();
+    return true;
+}
+
 
 bool Send(int index, Packet packet)
 {
     return send(Connections[index], (char*)&packet, sizeof(int), 0) == sizeof(int);
 }
 
-
 bool Send(int index, int n)
 {
     return send(Connections[index], (char*)&n, sizeof(int), 0) == sizeof(int);
+}
+
+bool Send(int index, string& msg)
+{
+    Send(index, msg.size());
+    return send(Connections[index], msg.c_str(), msg.size(), 0);
+}
+
+bool Send(int index, const vector<int>& vector)
+{
+    int size = vector.size();
+    Send(index, size);
+
+    for (int i = 0; i < size; ++i)
+        Send(index, vector[i]);
 }
 
 
@@ -127,84 +169,73 @@ bool ProcessPacket(int index, Packet packettype)
             cout << "Generation parameters for " << index << " client: " <<
                     h << " " << w << " " << min_l << " " << max_l << " " << dict << endl;
 
+            // Prepare dictionary for work
             createDictionaryWords(dict);
 
+            // Initialize new algorithm
             algos[index] = new DancingLinks(h, w, min_l, max_l, dict);
 
-            string msg;
-            vector<int> colors;
-
+            // Create new thread to get Cancel Request from user
             generating[index] = true;
             HANDLE t = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)CancelThread,
                          (LPVOID)index, 0, nullptr);
 
+            string msg;
+            vector<int> colors;
+
+            // Start generation
             if (algos[index]->FindSolution() && !algos[index]->Stopped())
-                msg = algos[index]->getRes(colors);
+                msg = algos[index]->getRes(colors); // If generation is ended and not stopped - gets generation data
             else
                 msg = "Error";
 
+            // If field algorithm ended his work before Cancel Request from user - kill cancel thread
             TerminateThread(t, 0);
 
-            int msg_size = msg.size();
-            int col_size = colors.size();
-            bool english = (msg[msg_size - 1] >= 'a' && msg[msg_size - 1] <= 'z');
-
+            // Checking if all words are english
+            bool english = (msg.back() >= 'a' && msg.back() <= 'z');
             if (!english)
-                ChangeString(msg);
+                ChangeString(msg);  // If words are russian - change their codes;
 
             Send(index, P_FieldAnsRequest);
             Send(index, english);
-            send(Connections[index], (char*)&msg_size, sizeof(int), 0);
-            send(Connections[index], msg.c_str(), msg_size, 0);
+            Send(index, msg);
 
             if (msg != "Error")
-            {
-                send(Connections[index], (char*)&col_size, sizeof(int), 0);
-                for (int i = 0; i < col_size; ++i)
-                    send(Connections[index], (char*)&colors[i], sizeof(int), 0);
-            }
+                Send(index, colors);
 
             delete algos[index];
             return true;
         }
         case P_DictionaryAddRequest:
         {
-            int len;
-            string dict_name;
-
             // Receiving new dictionary name
+            string dict_name;
             if (!ReadString(index, dict_name))
                 return false;
 
-            // Receiving dictionary lenght
-            if (!ReadInt(index, len))
-                return false;
-
-            fstream dict;
-
-            CreateDirectory(("../Dictionaries/" + dict_name).c_str(), nullptr);
-            dict.open("../Dictionaries/" + dict_name + "/Dictionary.txt", ios::out);
-
-            if (!dict.is_open())
-                return false;
-
-            for (int i = 0; i < len; ++i)
+            // Checking if dictionary with this name already exists
+            if (alreadyExist(dict_name))
             {
-                byte byte;
-                recv(Connections[index], (char*)&byte, sizeof(byte), 0);
-                if (byte != 13)
-                    dict.put(byte);
+                Send(index, P_DictAlreadyExist);
+                return true;
             }
+            else
+                Send(index, P_DictNotExist);
 
-            dict.close();
+            // Create new directory for new dictionary
+            CreateDirectory(("../Dictionaries/" + dict_name).c_str(), nullptr);
 
+            ReadDict(index, dict_name);
             bool good = checkDictionary(dict_name);
 
+            // If file has incorrect format - delete it and directory
             if (!good)
             {
                 DeleteFile(("../Dictionaries/" + dict_name + "/Dictionary.txt").c_str());
                 RemoveDirectory(("../Dictionaries/" + dict_name).c_str());
             }
+
             Send(index, P_DictionaryAddAnsRequest);
             Send(index, good);
 
@@ -212,15 +243,13 @@ bool ProcessPacket(int index, Packet packettype)
         }
         case P_DictionariesListRequest:
         {
+            // getting all directories in dictionaries
             vector<string> dicts = getDictionaries();
             string msg;
             for (const string& dict : dicts)
                 msg += dict + "\n";
 
-            int msg_size = msg.size();
-
-            send(Connections[index], (char*)&msg_size, sizeof(int), 0);
-            send(Connections[index], msg.c_str(), msg_size, 0);
+            Send(index, msg);
 
             return true;
         }

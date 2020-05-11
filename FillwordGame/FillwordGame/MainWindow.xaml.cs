@@ -210,7 +210,10 @@ namespace FillwordGame
 
             if (generated == "Error")
             {
-                MessageBox.Show("Can't generate field with this parameters!");
+                MessageBox.Show("Can't generate field with this parameters!\n" +
+                    "1. Update the list of dictionaries, selected can be deleted\n" +
+                    "2. Check the generation parameters\n" +
+                    "3. This dictionary may have not enough amount of words");
                 return;
             }
 
@@ -265,7 +268,8 @@ namespace FillwordGame
 
             foreach (char ch in name)
             {
-                if (!(ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'))
+                if (!(ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' ||
+                    ch >= '0' && ch <= '9' || ch == '_'))
                     return false;
             }
             return true;
@@ -276,8 +280,12 @@ namespace FillwordGame
             string ans = await Task.Run(() => Manager.DictionaryAddRequest(newDict, newDictName));
             if (ans == "Good")
                 MessageBox.Show("Dictionary successfully added! Update dictionaries!");
+            else if (ans == "Exist")
+                MessageBox.Show("Dictionary with this name already exist!");
             else
-                MessageBox.Show("Failed while adding a dictionary");
+                MessageBox.Show("Failed while adding a dictionary!\n" +
+                    "If dictionary format is correct, check file encoding\n" +
+                    "Try to send file with encoding UTF-8");
 
         }
 

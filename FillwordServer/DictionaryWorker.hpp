@@ -12,6 +12,8 @@ vector<string> getDictionaries();
 
 bool createDictionaryWords(const string& dict);
 
+bool alreadyExist(const string& name);
+
 bool checkDictionary(const string& dict);
 
 #endif //FILLWORDSERVER_DICTIONARYWORKER_HPP

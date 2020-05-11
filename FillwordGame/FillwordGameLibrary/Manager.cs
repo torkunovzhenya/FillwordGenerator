@@ -15,6 +15,8 @@ namespace FillwordGameLibrary
         P_DictionariesListRequest,
         P_DictionaryAddRequest,
         P_DictionaryAddAnsRequest,
+        P_DictAlreadyExist,
+        P_DictNotExist,
         P_Error
     };
 
@@ -130,10 +132,19 @@ namespace FillwordGameLibrary
 
         static void Send(FileStream file)
         {
-            for (long i = 0; i < file.Length; i++)
-                stream.WriteByte((byte)file.ReadByte());
-        }
+            string s = "";
 
+            using (StreamReader reader = new StreamReader(file, true))
+            {
+                s = reader.ReadToEnd();
+            }
+
+            Encoding encoding = Encoding.GetEncoding(1251);
+            byte[] data = encoding.GetBytes(s);
+
+            Send(data.Length);
+            stream.Write(data, 0, data.Length);
+        }
 
         static void ChangeString(ref string s)
         {
@@ -265,7 +276,7 @@ namespace FillwordGameLibrary
         public static string DictionaryAddRequest(string filename, string newName)
         {
             busy = true;
-            string message = "";
+            string message = "Error";
             try
             {
                 using (FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read))
@@ -274,10 +285,14 @@ namespace FillwordGameLibrary
                     
                     Send(sendingPacket);
                     Send(newName);
-                    Send((int)file.Length);
+                    
+                    Packet receivedPacket = ReceivePacket();
+                    if (receivedPacket == Packet.P_DictAlreadyExist)
+                        return "Exist";
+                    
                     Send(file);
 
-                    Packet receivedPacket = ReceivePacket();
+                    receivedPacket = ReceivePacket();
                     ProcessPacket(receivedPacket, ref message);
                 }
             }

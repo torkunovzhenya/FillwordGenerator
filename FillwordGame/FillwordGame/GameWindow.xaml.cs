@@ -39,7 +39,6 @@ namespace FillwordGame
 
             border = new Border();
             border.Width = this.Width;
-            //border.Height = this.Height;
             border.BorderThickness = new Thickness(2);
             border.BorderBrush = new SolidColorBrush(Color.FromRgb(204, 119, 34));
             border.Child = this;
@@ -255,6 +254,8 @@ namespace FillwordGame
 
         void PrepareField(int h, int w, int minL, int maxL, string generated, out char[] colors, out char[] letters)
         {
+            wordWraps.Clear();
+
             height = h;
             TILE_H = FIELD_SIDE / height;
 
@@ -418,8 +419,6 @@ namespace FillwordGame
             for (int i = 0; i < height; i++)
                 for (int j = 0; j < width; j++)
                     field[i][j].Open();
-
-            //wordWraps.ForEach(word => word.CrossOut());
         }
     }
 }
