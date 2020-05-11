@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FillwordGame"
         mc:Ignorable="d"
-        Title="GameWindow" Height="600" Width="1000" ResizeMode="CanMinimize">
+        Title="FillwordGame" Height="600" Width="1000" ResizeMode="CanMinimize" Icon="pack://siteoforigin:,,,/Resources/assets/logo.png">
     <Canvas x:Name="CanvasMap" MouseLeftButtonDown="CanvasMap_MouseLeftButtonDown" MouseLeftButtonUp="CanvasMap_MouseLeftButtonUp" MouseMove="CanvasMap_MouseMove" MouseLeave="CanvasMap_MouseLeave">
         <Image Source="pack://siteoforigin:,,,/Resources/assets/background.jpg" Width="994" Height="570" Stretch="UniformToFill"/>
         <ScrollViewer x:Name="scrollBar" Canvas.Left="550" Canvas.Top="30" CanContentScroll="True" VerticalScrollBarVisibility="Auto">

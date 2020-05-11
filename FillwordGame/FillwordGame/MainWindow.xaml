@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:FillwordGame"
         xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2" x:Class="FillwordGame.MainWindow"
         mc:Ignorable="d"
-        Title="FillwordGame" Height="450" Width="800" ResizeMode="CanMinimize" Closed="Window_Closed">
+        Title="FillwordGame" Height="450" Width="800" ResizeMode="CanMinimize" Closed="Window_Closed" Icon="pack://siteoforigin:,,,/Resources/assets/logo.png">
     <Window.Resources>
         <Style TargetType="{x:Type Button}" x:Key="GameButtonStyle">
             <Setter Property="Background" Value="#FFE8AC6F"/>

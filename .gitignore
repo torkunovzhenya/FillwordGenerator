@@ -1,14 +1,16 @@
 /FillwordServer/.idea
-/FillwordServer/cmake-build-debug
+/FillwordServer/cmake-build*
 /FillwordServer/CMakeLists.txt
+/FillwordServer/Dictionaries/*
+!/FillwordServer/Dictionaries/*/Dictionary.txt
 
 /PolyminoGenerator/.idea
-/PolyminoGenerator/cmake-build-debug
+/PolyminoGenerator/cmake-build*
 /PolyminoGenerator/CMakeLists.txt
 /PolyminoGenerator/Generated_figures/*.txt
 
 /Dictsort/.idea
-/Dictsort/cmake-build-debug
+/Dictsort/cmake-build*
 /Dictsort/CMakeLists.txt
 
 

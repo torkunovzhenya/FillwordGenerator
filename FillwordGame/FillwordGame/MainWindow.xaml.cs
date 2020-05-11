@@ -29,7 +29,7 @@ namespace FillwordGame
         private static string dict_selected;
         private static int dict_index_selected = 0;
 
-        private static string[] dicts = { "Russian1", "Russian2" };
+        private static string[] dicts = { "No dicts" };
         private static string newDict;
         private static string newDictName;
         private static bool windowActive;
