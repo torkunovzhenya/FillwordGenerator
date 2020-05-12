@@ -3,7 +3,7 @@
 using namespace std;
 
 // Get the list of all directories in directory Dictionaries
-vector<string> getDictionaries()
+vector<string> DictionaryWorker::getDictionaries()
 {
     vector<string> ans;
     string path = "../Dictionaries/";
@@ -32,7 +32,7 @@ vector<string> getDictionaries()
 }
 
 
-bool createDictionaryWords(const string& dict)
+bool DictionaryWorker::createDictionaryWords(const string& dict)
 {
     string path = "../Dictionaries/" + dict + "/";
     wfstream fin;
@@ -77,7 +77,7 @@ bool createDictionaryWords(const string& dict)
 }
 
 
-bool alreadyExist(const string& name)
+bool DictionaryWorker::alreadyExist(const string& name)
 {
     for (const string& dict: getDictionaries())
         if (dict == name)
@@ -87,7 +87,7 @@ bool alreadyExist(const string& name)
 }
 
 
-bool checkDictionary(const string& name)
+bool DictionaryWorker::checkDictionary(const string& name)
 {
     wfstream dict;
     dict.open("../Dictionaries/" + name + "/Dictionary.txt", ios::in);

@@ -8,12 +8,17 @@
 
 using namespace std;
 
-vector<string> getDictionaries();
+class DictionaryWorker
+{
+public:
 
-bool createDictionaryWords(const string& dict);
+    static vector<string> getDictionaries();
 
-bool alreadyExist(const string& name);
+    static bool createDictionaryWords(const string& dict);
 
-bool checkDictionary(const string& dict);
+    static bool alreadyExist(const string& name);
+
+    static bool checkDictionary(const string& dict);
+};
 
 #endif //FILLWORDSERVER_DICTIONARYWORKER_HPP

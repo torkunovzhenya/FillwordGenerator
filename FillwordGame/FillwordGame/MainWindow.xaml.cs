@@ -29,8 +29,8 @@ namespace FillwordGame
         private static string dict_selected;
         private static int dict_index_selected = 0;
 
-        private static string[] dicts = { "No dicts" };
-        private static string newDict;
+        private static string[] dicts = new string[0];
+        private static string newDictFile;
         private static string newDictName;
         private static bool windowActive;
         private static bool stopped = false;
@@ -80,7 +80,7 @@ namespace FillwordGame
         }
 
 
-        private async void ConnectionCheckingAsync()
+        private async Task ConnectionCheckingAsync()
         {
             while (windowActive)
             {
@@ -184,14 +184,21 @@ namespace FillwordGame
             w_selected = Combo_W.SelectedIndex + 3;
             minL_selected = Combo_MinL.SelectedIndex + 3;
             maxL_selected = Combo_MaxL.SelectedIndex + 3;
-            dict_selected = ((TextBlock)Combo_Dict.SelectedItem).Text;
-            dict_index_selected = Combo_Dict.SelectedIndex;
+            
+            if (Combo_Dict.SelectedItem == null)
+            {
+                MessageBox.Show("No dictionary selected");
+                return;
+            }
 
             if (maxL_selected < minL_selected)
             {
-                MessageBox.Show("Minimal lenght can't be higher than maximal lenght!");
+                MessageBox.Show("Minimal word lenght can't be higher than maximal word lenght!");
                 return;
             }
+
+            dict_selected = ((TextBlock)Combo_Dict.SelectedItem).Text;
+            dict_index_selected = Combo_Dict.SelectedIndex;
 
             stopped = false;
 
@@ -277,15 +284,22 @@ namespace FillwordGame
         
         private async Task DictAnswerWaitAsync()
         {
-            string ans = await Task.Run(() => Manager.DictionaryAddRequest(newDict, newDictName));
-            if (ans == "Good")
-                MessageBox.Show("Dictionary successfully added! Update dictionaries!");
-            else if (ans == "Exist")
-                MessageBox.Show("Dictionary with this name already exist!");
-            else
-                MessageBox.Show("Failed while adding a dictionary!\n" +
-                    "If dictionary format is correct, check file encoding\n" +
-                    "Try to send file with encoding UTF-8");
+            string ans = await Task.Run(() => Manager.DictionaryAddRequest(newDictFile, newDictName));
+
+            switch (ans)
+            {
+                case "Good":
+                    MessageBox.Show("Dictionary successfully added! Update dictionaries!");
+                    return;
+                case "Exist":
+                    MessageBox.Show("Dictionary with this name already exist!");
+                    return;
+                default:
+                    MessageBox.Show("Failed while adding a dictionary!\n" +
+                        "If dictionary format is correct, check file encoding\n" +
+                        "Try to send file with encoding UTF-8");
+                    return;
+            }
 
         }
 
@@ -334,9 +348,9 @@ namespace FillwordGame
             // Process open file dialog box results
             if (result == true)
             {
-                newDict = dlg.FileName;
+                newDictFile = dlg.FileName;
 
-                fileNameLabel.Text = newDict;
+                fileNameLabel.Text = newDictFile;
                 addButton.IsEnabled = true;
             }
         }

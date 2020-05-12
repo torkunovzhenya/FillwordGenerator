@@ -23,11 +23,11 @@ namespace FillwordGameLibrary
 
     public static class Manager
     {
-        const string address = "127.0.0.1";
-        const int port = 1111;
+        private const string address = "127.0.0.1";
+        private const int port = 1111;
 
-        static TcpClient client = null;
-        static NetworkStream stream = null;
+        private static TcpClient client = null;
+        private static NetworkStream stream = null;
         private static bool connected = false;
         private static bool busy = false;
 
@@ -133,7 +133,7 @@ namespace FillwordGameLibrary
         static void Send(FileStream file)
         {
             string s = "";
-
+            
             using (StreamReader reader = new StreamReader(file, true))
             {
                 s = reader.ReadToEnd();
@@ -164,7 +164,7 @@ namespace FillwordGameLibrary
             s = newS;
         }
 
-        static bool ProcessPacket(Packet packettype, ref string message)
+        static void ProcessPacket(Packet packettype, ref string message)
         {
             try
             {
@@ -173,15 +173,14 @@ namespace FillwordGameLibrary
                     case Packet.P_ConnectionRequest:
 
                         connected = true;
-                        return true;
+                        return;
                     case Packet.P_FieldAnsRequest:
 
                         int english = ReceiveInt();
-
                         message = ReceiveString();
 
                         if (message == "Error")
-                            return true;
+                            return;
 
                         message += '\n';
 
@@ -200,16 +199,17 @@ namespace FillwordGameLibrary
                             message += second;
                         }
 
-                        return true;
+                        return;
                     case Packet.P_DictionaryAddAnsRequest:
 
                         int ans = ReceiveInt();
                         message = ans == 0 ? "Error" : "Good";
-                        return true;
+                        return;
                     default:
 
-                        Console.WriteLine("Unrecognized packet");
-                        return false;
+                        Console.WriteLine("Unrecognized packet");   
+                        Disconnect();
+                        return;
                 }
             }
             catch
@@ -219,7 +219,7 @@ namespace FillwordGameLibrary
                 Console.ReadLine();
                 Disconnect();
 
-                return false;
+                return;
             }
         }
 
@@ -285,12 +285,34 @@ namespace FillwordGameLibrary
                     
                     Send(sendingPacket);
                     Send(newName);
-                    
+
                     Packet receivedPacket = ReceivePacket();
                     if (receivedPacket == Packet.P_DictAlreadyExist)
                         return "Exist";
-                    
+
                     Send(file);
+
+                    receivedPacket = ReceivePacket();
+                    ProcessPacket(receivedPacket, ref message);
+                }
+
+                if (message == "Good")
+                    return message;
+
+                using (FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                {
+                    Packet sendingPacket = Packet.P_DictionaryAddRequest;
+
+                    Send(sendingPacket);
+                    Send(newName);
+
+                    Packet receivedPacket = ReceivePacket();
+                    if (receivedPacket == Packet.P_DictAlreadyExist)
+                        return "Exist";
+
+                    Send((int)file.Length);
+                    for (long i = 0; i < file.Length; i++)
+                        stream.WriteByte((byte)file.ReadByte());
 
                     receivedPacket = ReceivePacket();
                     ProcessPacket(receivedPacket, ref message);

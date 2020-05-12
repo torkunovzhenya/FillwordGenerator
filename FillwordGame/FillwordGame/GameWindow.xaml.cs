@@ -21,7 +21,7 @@ namespace FillwordGame
         private Border border;
         private TextBlock text;
 
-        public WordWrap(int number, string word, StackPanel wordsWrap)
+        public WordWrap(string word, StackPanel wordsWrap)
         {
             this.Background = new SolidColorBrush(Color.FromRgb(232, 172, 111));
             this.word = word;
@@ -248,8 +248,6 @@ namespace FillwordGame
         private TileWay way;
         private bool trackMouse = false;
         private int wordsLeft;
-        private int minFigureLength;
-        private int maxFigureLength;
 
 
         void PrepareField(int h, int w, int minL, int maxL, string generated, out char[] colors, out char[] letters)
@@ -261,9 +259,6 @@ namespace FillwordGame
 
             width = w;
             TILE_W = FIELD_SIDE / width;
-
-            minFigureLength = minL;
-            maxFigureLength = maxL;
 
             n = int.Parse(generated.Substring(0, generated.IndexOf('\n')));
 
@@ -301,7 +296,7 @@ namespace FillwordGame
             canvas = CanvasMap;
 
             for (int i = 0; i < n; i++)
-                wordWraps.Add(new WordWrap(i, words[i], wordsWrap));
+                wordWraps.Add(new WordWrap(words[i], wordsWrap));
 
             for (int i = 0; i < h; i++)
             {

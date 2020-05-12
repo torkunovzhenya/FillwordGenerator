@@ -106,11 +106,11 @@ bool Send(int index, const vector<int>& vector)
 }
 
 
-void CancelThread(int index)
+void CancelHandler(int index)
 {
+    Packet packet;
     while (generating[index])
     {
-        Packet packet;
         recv(Connections[index], (char *) &packet, sizeof(Packet), 0);
 
         if (packet == P_StopGenRequest)
@@ -170,15 +170,15 @@ bool ProcessPacket(int index, Packet packettype)
                     h << " " << w << " " << min_l << " " << max_l << " " << dict << endl;
 
             // Prepare dictionary for work
-            createDictionaryWords(dict);
+            DictionaryWorker::createDictionaryWords(dict);
 
             // Initialize new algorithm
             algos[index] = new DancingLinks(h, w, min_l, max_l, dict);
 
             // Create new thread to get Cancel Request from user
             generating[index] = true;
-            HANDLE t = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)CancelThread,
-                         (LPVOID)index, 0, nullptr);
+            HANDLE t = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) CancelHandler,
+                                    (LPVOID) index, 0, nullptr);
 
             string msg;
             vector<int> colors;
@@ -215,7 +215,7 @@ bool ProcessPacket(int index, Packet packettype)
                 return false;
 
             // Checking if dictionary with this name already exists
-            if (alreadyExist(dict_name))
+            if (DictionaryWorker::alreadyExist(dict_name))
             {
                 Send(index, P_DictAlreadyExist);
                 return true;
@@ -227,7 +227,7 @@ bool ProcessPacket(int index, Packet packettype)
             CreateDirectory(("../Dictionaries/" + dict_name).c_str(), nullptr);
 
             ReadDict(index, dict_name);
-            bool good = checkDictionary(dict_name);
+            bool good = DictionaryWorker::checkDictionary(dict_name);
 
             // If file has incorrect format - delete it and directory
             if (!good)
@@ -244,7 +244,7 @@ bool ProcessPacket(int index, Packet packettype)
         case P_DictionariesListRequest:
         {
             // getting all directories in dictionaries
-            vector<string> dicts = getDictionaries();
+            vector<string> dicts = DictionaryWorker::getDictionaries();
             string msg;
             for (const string& dict : dicts)
                 msg += dict + "\n";

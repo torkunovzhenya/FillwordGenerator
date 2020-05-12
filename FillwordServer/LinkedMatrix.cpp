@@ -6,10 +6,6 @@
 
 Node::Node(int row, int col) : row(row), col(col) {}
 
-Node::Node(Node *left, Node *right, Node *up, Node *down, int row, int col) :
-        left(left), right(right), up(up),
-        down(down), row(row), col(col) {}
-
 
 LinkedMatrix::LinkedMatrix(int n, int m)
 {
@@ -17,7 +13,7 @@ LinkedMatrix::LinkedMatrix(int n, int m)
     cols = n * m;
     figures_count = std::vector<int>(n * m + 1);
 
-    root = new Node(nullptr, nullptr, nullptr, nullptr, 0, 0);
+    root = new Node(0, 0);
     Node* curr = root;
 
     col_heads.push_back(root);

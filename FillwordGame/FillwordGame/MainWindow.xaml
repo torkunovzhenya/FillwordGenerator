@@ -299,7 +299,7 @@
     <Canvas x:Name="CanvasMap">
         <Image Source="pack://siteoforigin:,,,/Resources/assets/background.jpg" Width="794" Height="420" Stretch="UniformToFill"/>
         <Button x:Name="generatingButton" Content="Generate new field" Style="{StaticResource ResourceKey=GameButtonStyle}" Canvas.Left="39" Canvas.Top="48" Width="400" Height="50" FontSize="36" SnapsToDevicePixels="True" Click="GenerationButton_Click"/>
-        <Button x:Name="dictionaryAddButton" Content="Add new dictionary" Canvas.Left="39" Style="{StaticResource GameButtonStyle}" Canvas.Top="253" Width="400" Height="50" FontSize="36" SnapsToDevicePixels="True" Click="DictAddButton_Click"/>
+        <Button x:Name="dictionaryAddButton" Content="Add new dictionary" Canvas.Left="39" Style="{StaticResource GameButtonStyle}" Canvas.Top="253" Width="400" Height="52" FontSize="36" SnapsToDevicePixels="True" Click="DictAddButton_Click" Padding="0"/>
         <Rectangle Fill="#FFE8AC6F" Height="192" Canvas.Left="460" Stroke="#FFCC7722" Canvas.Top="48" Width="305"/>
         <ComboBox x:Name="Combo_W" Canvas.Left="687" Canvas.Top="191" Width="60" IsReadOnly="True" FontSize="24" Style="{DynamicResource ComboBoxStyle1}" SelectedIndex="0" Foreground="#FFCC7722"/>
         <ComboBox x:Name="Combo_H" Canvas.Left="687" Canvas.Top="147" Width="60" IsReadOnly="True" FontSize="24" Style="{DynamicResource ComboBoxStyle1}" SelectedIndex="0" Foreground="#FFCC7722"/>
