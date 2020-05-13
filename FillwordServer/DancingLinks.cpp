@@ -124,6 +124,8 @@ std::vector<Figure::Cell*> Figure::GetRandomWay(const std::string& word)
 
         order.pop_back();
     }
+
+    return ans;
 }
 
 
@@ -236,7 +238,7 @@ bool DancingLinks::FindSolution()
 {
     if (should_stop)
     {
-        std::cout << "Sad story" << std::endl;
+        std::cout << "Algorithm was cancelled" << std::endl;
         return true;
     }
 

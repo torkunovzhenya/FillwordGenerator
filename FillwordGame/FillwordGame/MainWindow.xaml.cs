@@ -34,6 +34,7 @@ namespace FillwordGame
         private static string newDictName;
         private static bool windowActive;
         private static bool stopped = false;
+        private static bool dict_adding = false;
         private static bool field_generating = false;
 
         public MainWindow()
@@ -135,6 +136,7 @@ namespace FillwordGame
         private void UpdateDictionaries()
         {
             Combo_Dict.Items.Clear();
+
             foreach (string dict in dicts)
             {
                 TextBlock tdict = new TextBlock();
@@ -193,7 +195,7 @@ namespace FillwordGame
 
             if (maxL_selected < minL_selected)
             {
-                MessageBox.Show("Minimal word lenght can't be higher than maximal word lenght!");
+                MessageBox.Show("Minimal word length can't be higher than maximal word length!");
                 return;
             }
 
@@ -223,6 +225,11 @@ namespace FillwordGame
                     "3. This dictionary may have not enough amount of words");
                 return;
             }
+            if (generated == "Connection")
+            {
+                MessageBox.Show("Lost connection to server!");
+                return;
+            }
 
             GameWindow gameWindow = new GameWindow(h_selected, w_selected, minL_selected, maxL_selected, generated);
             gameWindow.Show();
@@ -240,13 +247,17 @@ namespace FillwordGame
 
             dictionaryAddPlate.Visibility = Visibility.Visible;
             DisableWindowElements();
-
             addButton.IsEnabled = false;
+            dictCancelButton.IsEnabled = true;
+            
             fileNameLabel.Text = "Dictionary.txt path";
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!field_generating)
+                return;
+
             stopped = true;
             field_generating = false;
             Manager.CancelGenerating();
@@ -261,8 +272,17 @@ namespace FillwordGame
                     return;
             }
 
+            DisableWindowElements();
             string dicts_m = await Task.Run(() => Manager.GetDictionaries());
+            EnableWindowElements();
+
             dicts = dicts_m.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (dicts.Length == 0)
+            {
+                MessageBox.Show("No dictionaries. Add new dictionary!");
+                return;
+            }
 
             UpdateDictionaries();
         }
@@ -270,7 +290,7 @@ namespace FillwordGame
 
         private bool CheckNewDictName(string name)
         {
-            if (name.Length == 0)
+            if (name.Length == 0 || name.Length > 20)
                 return false;
 
             foreach (char ch in name)
@@ -288,11 +308,18 @@ namespace FillwordGame
 
             switch (ans)
             {
+                case "Too large":
+                    MessageBox.Show("File is too large!\n" +
+                        "File should be no more than 10Mb!");
+                    return;
                 case "Good":
                     MessageBox.Show("Dictionary successfully added! Update dictionaries!");
                     return;
                 case "Exist":
                     MessageBox.Show("Dictionary with this name already exist!");
+                    return;
+                case "Connection":
+                    MessageBox.Show("Lost connection to server!");
                     return;
                 default:
                     MessageBox.Show("Failed while adding a dictionary!\n" +
@@ -323,7 +350,13 @@ namespace FillwordGame
 
             newDictName = newDictNameField.Text;
 
-            Task.Run(() => DictAnswerWaitAsync());
+            addButton.IsEnabled = false;
+            dictCancelButton.IsEnabled = false;
+            dict_adding = true;
+
+            await DictAnswerWaitAsync();
+
+            dict_adding = false;
 
             dictionaryAddPlate.Visibility = Visibility.Hidden;
             EnableWindowElements();

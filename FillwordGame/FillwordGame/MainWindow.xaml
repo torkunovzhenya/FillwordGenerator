@@ -321,6 +321,7 @@
                 <Button Content="Cancel" Style="{StaticResource ResourceKey=GameButtonStyle}" Margin="90,10,90,0" Height="31" FontSize="18" Click="CancelButton_Click" IsCancel="True"/>
             </StackPanel>
         </Border>
+        <TextBlock x:Name="connectionLabel" TextWrapping="Wrap" Text="No connection to server" Canvas.Top="383" Width="794" Height="27" Background="#FF835A30" Foreground="#FFCC7722" FontSize="20" TextAlignment="Center"/>
         <Border x:Name="dictionaryAddPlate" Canvas.Left="225" Canvas.Top="70" BorderBrush="#FFCC7722" BorderThickness="5" Visibility="Hidden">
             <StackPanel Background="#FFE8AC6F" Width="350" ClipToBounds="True" AllowDrop="True">
                 <StackPanel Height="50" Orientation="Horizontal">
@@ -329,8 +330,11 @@
                     </Border>
                     <Button Content="Change" Style="{StaticResource ResourceKey=GameButtonStyle}" Width="100" Height="30" Margin="7,0,0,0" FontSize="20" BorderThickness="3" Click="ChangeDictButton_Click" />
                 </StackPanel>
-                <Label Foreground="#FFCC7722" FontFamily="Georgia" FontSize="14">
+                <Label Foreground="#FFCC7722" FontFamily="Georgia" FontSize="14" Height="23" Margin="0,0,0.4,0" Padding="5,6,5,0">
                     Enter the name using english letters, numbers and "__"
+                </Label>
+                <Label Foreground="#FFCC7722" FontFamily="Georgia" FontSize="14" Height="25" Margin="0,0,0.4,0" Padding="5,0">
+                    (no more than 20 symbols)
                 </Label>
                 <TextBox x:Name="newDictNameField" FontSize="20" Margin="10,0" Background="#FFEEC398" Foreground="#FFCC7722" BorderBrush="#FFCC7722" BorderThickness="2" AllowDrop="False"/>
                 <StackPanel Height="130" Orientation="Horizontal">
@@ -340,14 +344,13 @@
                              
                              -One word on each line
                              
-                             -No other symbols except english letters and line breaks" Width="350" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#FFB35B04" FontSize="16" FontFamily="Georgia" Padding="5,0,0,0" VerticalContentAlignment="Stretch" Margin="0,4,0,-0.4" IsEnabled="False"/>
+                             -No other symbols except english or russian letters and line breaks" Width="350" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#FFB35B04" FontSize="16" FontFamily="Georgia" Padding="5,0,0,0" VerticalContentAlignment="Stretch" Margin="0,4,0,-0.4" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Height="50" Orientation="Horizontal">
                     <Button x:Name="addButton" Content="Add" Style="{StaticResource ResourceKey=GameButtonStyle}" Width="100" Height="30" Margin="69,0,0,0" FontSize="20" BorderThickness="3" Click="AddButton_Click" />
-                    <Button Content="Cancel" Style="{StaticResource ResourceKey=GameButtonStyle}" Width="100" Height="30" Margin="10,0,0,0" FontSize="20" BorderThickness="3" Click="DictCancelButton_Click" />
+                    <Button x:Name="dictCancelButton" Content="Cancel" Style="{StaticResource ResourceKey=GameButtonStyle}" Width="100" Height="30" Margin="10,0,0,0" FontSize="20" BorderThickness="3" Click="DictCancelButton_Click" />
                 </StackPanel>
             </StackPanel>
         </Border>
-        <TextBlock x:Name="connectionLabel" TextWrapping="Wrap" Text="No connection to server" Canvas.Top="383" Width="794" Height="27" Background="#FF835A30" Foreground="#FFCC7722" FontSize="20" TextAlignment="Center"/>
     </Canvas>
 </Window>

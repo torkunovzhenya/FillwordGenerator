@@ -82,7 +82,11 @@ namespace FillwordGameLibrary
                 int len = BitConverter.ToInt32(msglen, 0);
 
                 byte[] msg = new byte[len];
-                int bytes = stream.Read(msg, 0, len);
+
+                if (len == 0)
+                    return "";
+
+                stream.Read(msg, 0, len);
 
                 response.Append(Encoding.UTF8.GetString(msg));
                 return response.ToString();
@@ -206,7 +210,7 @@ namespace FillwordGameLibrary
                         message = ans == 0 ? "Error" : "Good";
                         return;
                     default:
-
+                        message = "Connection";
                         Console.WriteLine("Unrecognized packet");   
                         Disconnect();
                         return;
@@ -214,7 +218,7 @@ namespace FillwordGameLibrary
             }
             catch
             {
-                message = "Error";
+                message = "Connection";
                 Console.WriteLine("Подключение прервано!");
                 Console.ReadLine();
                 Disconnect();
@@ -243,7 +247,7 @@ namespace FillwordGameLibrary
             }
             catch
             {
-                message = "Error";
+                message = "Connection";
             }
 
             busy = false;
@@ -281,6 +285,11 @@ namespace FillwordGameLibrary
             {
                 using (FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read))
                 {
+                    if (file.Length > 10485760)
+                        return "Too large";
+
+                    Console.WriteLine(file.Length);
+
                     Packet sendingPacket = Packet.P_DictionaryAddRequest;
                     
                     Send(sendingPacket);
@@ -320,7 +329,7 @@ namespace FillwordGameLibrary
             }
             catch
             {
-                message = "Error";
+                message = "Connection";
                 Console.WriteLine("Error while sending dictionary");
             }
 

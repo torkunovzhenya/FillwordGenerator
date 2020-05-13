@@ -2,6 +2,8 @@
 #include <vector>
 #include <set>
 #include <fstream>
+#include <windows.h>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -62,8 +64,6 @@ bool Count_for_loops(int x1, int y1, int x2, int y2)
 {
     dfs(x1, y1, x1, y1, x2, y2);
 
-    int counter1 = 0;
-    int counter2 = 0;
     for (int i = x1; i <= x2; ++i)
     {
         for (int j = y1; j <= y2; ++j)
@@ -232,14 +232,12 @@ void Add_to_set(int minx, int miny, int maxx, int maxy)
 }
 
 
-void findWays(int x, int y, int left, string way, int minx, int miny, int maxx, int maxy, bool can_go_left)
+void findWays(int x, int y, int left, int minx, int miny, int maxx, int maxy, bool can_go_left)
 {
     field[x][y] = 1;
 
     if (left == 0)
     {
-        //cout << way << " " << maxx - minx + 1 << " " << maxy - miny + 1 << endl;
-
         Add_to_set(minx, miny, maxx, maxy);
 
         field[x][y] = 0;
@@ -248,70 +246,76 @@ void findWays(int x, int y, int left, string way, int minx, int miny, int maxx, 
 
     // up and down
     if (!field[x - 1][y])
-        findWays(x - 1, y, left - 1, way + '^', min(x - 1, minx), miny, maxx, maxy, can_go_left);
+        findWays(x - 1, y, left - 1, min(x - 1, minx), miny, maxx, maxy, can_go_left);
     if (!field[x + 1][y])
-        findWays(x + 1, y, left - 1, way + 'v', minx, miny, max(x + 1, maxx), maxy, can_go_left);
+        findWays(x + 1, y, left - 1, minx, miny, max(x + 1, maxx), maxy, can_go_left);
 
     // left and right
     if (can_go_left && !field[x][y - 1])
-        findWays(x, y - 1, left - 1, way + '<', minx, min(y - 1, miny), maxx, maxy, can_go_left);
+        findWays(x, y - 1, left - 1, minx, min(y - 1, miny), maxx, maxy, can_go_left);
     if (!field[x][y + 1])
-        findWays(x, y + 1, left - 1, way + '>', minx, miny, maxx, max(y + 1, maxy), true);
+        findWays(x, y + 1, left - 1, minx, miny, maxx, max(y + 1, maxy), true);
 
     field[x][y] = 0;
 }
 
 
-int main(int argc, char* argv[]) {
+bool existDir(const char * name)
+{
+    struct stat s;
+    if (stat(name, &s)) return false;
+    return S_ISDIR(s.st_mode);
+};
 
-    if (argc > 2)
+
+int main()
+{
+    if (!existDir("../Generated_figures/"))
+        CreateDirectory("../Generated_figures/", nullptr);
+
+    for (int n = 3; n <= 10; ++n)
     {
-        cout << "Incorrect number of arguments" << endl;
-        return -1;
-    }
+        figures_set.clear();
+        field.clear();
+        field = vector<vector<char>>(2 * n, vector<char>(2 * n));
+        int x = n - 1;
+        int y = n;
 
-    int n;
-    if (argc == 1)
-        n = 10;
-    else
-        n = stoi(argv[1]);
+        field[n][n] = 1;
+        field[x][y] = 1;
 
-    field = vector<vector<char>>(2 * n, vector<char>(2 * n));
-    int x = n - 1;
-    int y = n;
+        fstream fout;
+        fout.open("../Generated_figures/" + to_string(n) + ".txt", ios::out);
 
-    field[n][n] = 1;
-    field[x][y] = 1;
-
-    fstream fout;
-    fout.open("../Generated_figures/" + to_string(n) + ".txt", ios::out);
-
-    if (fout.is_open())
-    {
-        findWays(x, y, n - 2, "^^", x, y, n, n, false);
-
-        fout << figures_set.size() << endl;
-
-        for (const figure& f : figures_set)
+        if (fout.is_open())
         {
-            fout << f.orientations << " " << f.reflection << " " << f.h << " " << f.w << endl;
+            findWays(x, y, n - 2, x, y, n, n, false);
 
-            for (auto cord : f.cords)
-                fout << cord.first << " " << cord.second << " ";
+            fout << figures_set.size() << endl;
 
-            fout << endl;
-
-            for (const figure& orientation : f.possible_variants)
+            for (const figure& f : figures_set)
             {
-                for (auto cord : orientation.cords)
-                    fout << cord.first << " " << cord.second << " ";
-                fout << endl;
-            }
-        }
-    }
-    else
-        cout << "Error while opening file!";
+                fout << f.orientations << " " << f.reflection << " " << f.h << " " << f.w << endl;
 
-    fout.close();
+                for (auto cord : f.cords)
+                    fout << cord.first << " " << cord.second << " ";
+
+                fout << endl;
+
+                for (const figure& orientation : f.possible_variants)
+                {
+                    for (auto cord : orientation.cords)
+                        fout << cord.first << " " << cord.second << " ";
+                    fout << endl;
+                }
+            }
+
+            cout << "Figures with len " << n << " successfully generated to folder Generated_figures" << endl;
+        }
+        else
+            cout << "Error while opening file " + to_string(n) + ".txt!";
+
+        fout.close();
+    }
     return 0;
 }

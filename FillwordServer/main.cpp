@@ -93,6 +93,8 @@ bool Send(int index, int n)
 bool Send(int index, string& msg)
 {
     Send(index, msg.size());
+    if (msg.empty())
+        return true;
     return send(Connections[index], msg.c_str(), msg.size(), 0);
 }
 
@@ -103,6 +105,8 @@ bool Send(int index, const vector<int>& vector)
 
     for (int i = 0; i < size; ++i)
         Send(index, vector[i]);
+
+    return true;
 }
 
 
@@ -305,6 +309,8 @@ int main(int argc, char* argv[])
     sListen = socket(AF_INET, SOCK_STREAM, 0);
     bind(sListen, (SOCKADDR*)&addr, sizeof(addr));
     listen(sListen, 10);
+
+    cout << "Server started" << endl;
 
     SOCKET newConnetion;
     for (int i = 0; i < 100; ++i)
