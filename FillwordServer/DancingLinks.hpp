@@ -1,7 +1,3 @@
-//
-// Created by Евгений on 23.04.2020.
-//
-
 #ifndef FILLWORDSERVER_DANCINGLINKS_HPP
 #define FILLWORDSERVER_DANCINGLINKS_HPP
 

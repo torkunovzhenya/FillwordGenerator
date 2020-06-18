@@ -3,6 +3,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <wchar.h>
+#include <sys/stat.h>
 #include "DancingLinks.hpp"
 #include "DictionaryWorker.hpp"
 
@@ -288,8 +289,20 @@ void ClientHandler(int index)
 }
 
 
+bool existDir(const char * name)
+{
+    struct stat s;
+    if (stat(name, &s)) return false;
+    return S_ISDIR(s.st_mode);
+};
+
+
+
 int main(int argc, char* argv[])
 {
+    if (!existDir("../Dictionaries/"))
+        CreateDirectory("../Dictionaries/", nullptr);
+
     setlocale(LC_ALL, "Russian");
     WSAData wsaData;
     WORD DLLVersion = MAKEWORD(2, 1);
