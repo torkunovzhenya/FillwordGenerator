@@ -1,14 +1,6 @@
-//
-// Created by Евгений on 22.04.2020.
-//
-
 #include "LinkedMatrix.hpp"
 
 Node::Node(int row, int col) : row(row), col(col) {}
-
-Node::Node(Node *left, Node *right, Node *up, Node *down, int row, int col) :
-        left(left), right(right), up(up),
-        down(down), row(row), col(col) {}
 
 
 LinkedMatrix::LinkedMatrix(int n, int m)
@@ -17,7 +9,7 @@ LinkedMatrix::LinkedMatrix(int n, int m)
     cols = n * m;
     figures_count = std::vector<int>(n * m + 1);
 
-    root = new Node(nullptr, nullptr, nullptr, nullptr, 0, 0);
+    root = new Node(0, 0);
     Node* curr = root;
 
     col_heads.push_back(root);
@@ -158,7 +150,7 @@ void LinkedMatrix::HideRow(Node* row)
 
 void LinkedMatrix::RestoreRows(std::vector<Node*> rows_hidden)
 {
-    Node* main_row_head = rows_hidden[0];
+    Node* main_row_head = rows_hidden.back();
 
     // Showing columns by making values not equal to -1
     Node* node = main_row_head;
@@ -213,5 +205,26 @@ std::vector<int> LinkedMatrix::getFigureCells(int row)
 
 LinkedMatrix::~LinkedMatrix()
 {
+    Node* row = root;
+    while (row->down != nullptr)
+    {
+        row = row->down;
 
+        Node* node = row->right;
+        while (node->right != row)
+        {
+            node = node->right;
+            delete node->left;
+        }
+
+        delete node;
+    }
+
+    for (int i = 1; i <= rows; ++i)
+        delete row_heads[i];
+
+    for (int i = 1; i <= cols; ++i)
+        delete col_heads[i];
+
+    delete root;
 }

@@ -1,7 +1,3 @@
-//
-// Created by Евгений on 23.04.2020.
-//
-
 #ifndef FILLWORDSERVER_DANCINGLINKS_HPP
 #define FILLWORDSERVER_DANCINGLINKS_HPP
 
@@ -16,20 +12,29 @@ class Figure
         Cell(int x, int y);
 
         std::vector<Cell*> neighbours;
+        bool visited = false;
         int x, y;
+        char letter;
     };
 
 public:
 
-    Figure(int length, std::vector<std::pair<int, int>> nodes);
+    Figure(int minx, int miny, int maxx, int maxy, std::vector<std::pair<int, int>> cords);
 
-    void FindWays();
+    int getLen();
 
-    std::vector<char> GetRandomWay();
+    std::vector<Cell*> GetRandomWay(const std::string& word);
 
-//private:
+private:
 
+    int len;
     std::vector<Cell*> cells;
+
+    bool dfs(Cell* c, std::vector<Figure::Cell*>& ans);
+
+    void fill_figure(std::vector<Cell*>& way, const std::string& word);
+
+    friend bool operator<(const Figure& left, const Figure& right);
 };
 
 
@@ -38,21 +43,29 @@ class DancingLinks
 
 public:
 
-    DancingLinks(int field_h, int field_w, std::vector<int> figures);
+    DancingLinks(int field_h, int field_w, int min_l, int max_l, const std::string& dict);
 
     bool FindSolution();
 
-    void PrintRes();
+    std::string getRes(std::vector<int>& colors);
 
-    virtual ~DancingLinks();
+    void Stop();
+
+    bool Stopped();
+
+    ~DancingLinks();
 
 private:
 
     int height;
     int width;
+    bool should_stop = false;
     LinkedMatrix* matrix = nullptr;
     std::vector<int> res;
+    std::vector<int> counts;
+    std::string dictionary;
 
+    std::vector<std::string> getWordsForField(std::vector<Figure>& figures);
 };
 
 

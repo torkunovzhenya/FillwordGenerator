@@ -14,7 +14,6 @@ public:
     int col;
 
     Node(int row, int col);
-    Node(Node *left, Node *right, Node *up, Node *down, int row, int col);
 };
 
 
@@ -22,23 +21,19 @@ class LinkedMatrix
 {
 public:
 
-    Node* ChooseCell();
+    LinkedMatrix(int n, int m);
 
     void AddLocation(std::vector<int> cells);
 
+    Node* ChooseCell();
+
     std::vector<Node*> ChooseRow(int row);
 
-    void HideRow(Node* row);
-
     void RestoreRows(std::vector<Node*> rows_hidden);
-
-    void ShowRow(Node* row);
 
     bool isColumnEmpty(Node* col);
 
     std::vector<int> getFigureCells(int row);
-
-    LinkedMatrix(int n, int m);
 
     ~LinkedMatrix();
 
@@ -50,6 +45,10 @@ private:
     std::vector<Node*> row_heads;
     std::vector<Node*> col_heads;
     Node* root;
+
+    void HideRow(Node* row);
+
+    void ShowRow(Node* row);
 };
 
 
